@@ -37,6 +37,8 @@ export default function Home() {
   const [selectedCountry, setSelectedCountry] =
     useState<Country>(DEFAULT_COUNTRY);
   const [phoneNumber, setPhoneNumber] = useState("");
+  const [whatsappNumber, setWhatsappNumber] = useState("");
+  const [isWhatsappLoading, setIsWhatsappLoading] = useState(false);
   const [isCallLoading, setIsCallLoading] = useState(false);
   const [callStatus, setCallStatus] = useState<{
     type: "success" | "error" | null;
@@ -46,6 +48,73 @@ export default function Home() {
     "idle" | "connecting" | "connected" | "disconnected"
   >("idle");
   const [currentCallId, setCurrentCallId] = useState<string | null>(null);
+  const [copySuccess, setCopySuccess] = useState(false);
+  const [whatsappStatus, setWhatsappStatus] = useState<{
+    type: "success" | "error" | null;
+    message: string;
+  }>({ type: null, message: "" });
+
+  // Function to trigger the Professional WhatsApp Template
+  // Function to trigger the Professional WhatsApp Template
+  const handleWhatsappDemo = async () => {
+    // Enhanced Validation: Check number length based on country
+    const cleanedNumber = whatsappNumber.replace(/\D/g, "");
+    
+    // Simple length check based on country code (example: US/Canada needs 10 digits)
+    // You can expand this with a more robust library like libphonenumber-js if needed
+    const MIN_LENGTH = selectedCountry.code === "US" || selectedCountry.code === "CA" || selectedCountry.code === "IN" ? 10 : 8;
+    const MAX_LENGTH = 15;
+
+    if (!whatsappNumber.trim() || cleanedNumber.length < MIN_LENGTH || cleanedNumber.length > MAX_LENGTH) {
+      setWhatsappStatus({
+        type: "error",
+        message: `Please enter a valid ${selectedCountry.name} number (${MIN_LENGTH}-${MAX_LENGTH} digits)`,
+      });
+      setTimeout(() => setWhatsappStatus({ type: null, message: "" }), 3000);
+      return;
+    }
+
+    setIsWhatsappLoading(true);
+    setWhatsappStatus({ type: null, message: "" }); // Clear previous status
+
+    const fullNumber = `${selectedCountry.dialCode}${cleanedNumber}`;
+
+    try {
+      //For production use procuction link here
+      const response = await fetch("http://localhost:8000/whatsappDemo", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ phone_number: fullNumber }),
+      });
+
+      const data = await response.json();
+      if (data.success) {
+        setWhatsappStatus({
+          type: "success",
+          message: `Template sent to ${fullNumber}!`,
+        });
+        setWhatsappNumber("");
+      } else {
+        setWhatsappStatus({
+          type: "error",
+          message: `Error: ${data.error}`,
+        });
+      }
+    } catch (err) {
+      setWhatsappStatus({
+        type: "error",
+        message: "Backend server is not responding.",
+      });
+    } finally {
+      setIsWhatsappLoading(false);
+      // Auto-dismiss success/error after 5 seconds
+      setTimeout(() => {
+        setWhatsappStatus((prev) =>
+          prev.type === "success" ? { type: null, message: "" } : prev,
+        );
+      }, 5000);
+    }
+  };
 
   const handleMakeCall = async () => {
     // Prevent multiple simultaneous calls
@@ -81,7 +150,7 @@ export default function Home() {
     setCallState("connecting");
 
     try {
-      const response = await fetch("http://localhost:5002/makeCall", {
+      const response = await fetch("http://192.168.1.61:5002/makeCall", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -138,7 +207,7 @@ export default function Home() {
     const pollInterval = setInterval(async () => {
       try {
         const response = await fetch(
-          `http://localhost:5002/callStatus/${callId}`,
+          `http://192.168.1.61:5002/callStatus/${callId}`,
         );
         const data = await response.json();
 
@@ -448,33 +517,95 @@ export default function Home() {
                         >
                           {/* Option 1: Message Us */}
                           <div className="flex items-center justify-between bg-white/40 border border-white/50 backdrop-blur-md rounded-xl p-2 px-3 shadow-sm">
-                            <div className="flex flex-col">
+                            <div
+                              className="flex flex-col cursor-pointer"
+                              onClick={() => {
+                                navigator.clipboard.writeText("+17178976546");
+                                setCopySuccess(true);
+                                setTimeout(() => setCopySuccess(false), 2000);
+                              }}
+                              title="Click to copy"
+                            >
                               <span className="text-[10px] uppercase text-gray-500 font-bold tracking-wider">
-                                Message Us
+                                {copySuccess ? "Copied!" : "Message Us"}
                               </span>
-                              <span className="text-sm font-mono font-bold text-gray-800">
-                                +1 (555) 123-4567
+                              <span className="text-sm font-mono font-bold text-gray-800 hover:text-green-600 transition-colors">
+                                +17178976546
                               </span>
                             </div>
-                            <button className="p-2 bg-[#25D366] text-white rounded-full shadow-md hover:bg-[#128C7E] transition-colors">
+                            <button
+                              onClick={() =>
+                                window.open(
+                                  "https://wa.me/17178976546?text=Hello",
+                                  "_blank",
+                                )
+                              }
+                              className="p-2 bg-[#25D366] text-white rounded-full shadow-md hover:bg-[#128C7E] transition-colors"
+                              title="Chat on WhatsApp"
+                            >
                               <MessageCircle size={16} />
                             </button>
                           </div>
 
-                          {/* Option 2: Request Demo */}
-                          <div className="flex items-center gap-2 p-1 bg-white/40 border border-white/50 backdrop-blur-md rounded-full shadow-sm focus-within:ring-2 focus-within:ring-gray-900/20 w-max">
+                          {/* OR Divider */}
+                          <div className="flex items-center gap-2 px-2">
+                            <div className="h-px bg-gray-300 flex-1"></div>
+                            <span className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">
+                              OR
+                            </span>
+                            <div className="h-px bg-gray-300 flex-1"></div>
+                          </div>
+                          <div className="flex items-center gap-1 p-1.5 bg-white/60 border border-white/50 backdrop-blur-md rounded-full shadow-sm">
+                            <CountryCodeSelect
+                              value={selectedCountry}
+                              onChange={setSelectedCountry}
+                            />
                             <input
                               type="tel"
-                              placeholder="Or enter your number"
-                              className="bg-transparent border-none outline-none text-gray-900 px-4 py-2 w-40 text-sm font-medium"
+                              placeholder="Your Number"
+                              className="bg-transparent text-black outline-none px-3 py-2 flex-1 text-sm font-medium w-0 min-w-0"
+                              value={whatsappNumber}
+                              onChange={(e) =>
+                                setWhatsappNumber(e.target.value)
+                              }
+                              onKeyDown={(e) => {
+                                if (e.key === "Enter" && !isWhatsappLoading) {
+                                  handleWhatsappDemo();
+                                }
+                              }}
+                              disabled={isWhatsappLoading}
                             />
                             <button
-                              onClick={() => setIsAnyAgentOpen(true)}
-                              className="flex items-center gap-2 px-4 py-2 bg-gray-900 text-white rounded-full font-bold shadow-md hover:bg-gray-800 transition-colors text-sm"
+                              onClick={handleWhatsappDemo}
+                              disabled={isWhatsappLoading}
+                              className="flex items-center gap-2 px-6 py-2 bg-gray-900 text-white rounded-full font-bold hover:bg-gray-800 transition-all disabled:opacity-50 whitespace-nowrap shrink-0"
                             >
-                              Get Demo <ArrowRight size={14} />
+                              {isWhatsappLoading ? "Sending..." : "Get Demo"}
+                              <ArrowRight size={16} />
                             </button>
                           </div>
+
+                          {/* WhatsApp Status Notification */}
+                          {whatsappStatus.type && (
+                            <div
+                              className={`px-4 py-2.5 rounded-xl backdrop-blur-md border shadow-sm transition-all duration-300 animate-slide-up ${
+                                whatsappStatus.type === "success"
+                                  ? "bg-white/40 border-white/50"
+                                  : "bg-white/40 border-white/50"
+                              }`}
+                            >
+                              <div className="flex items-center gap-2">
+                                {whatsappStatus.type === "success" ? (
+                                  <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse shrink-0" />
+                                ) : (
+                                  <div className="w-2 h-2 bg-red-500 rounded-full shrink-0" />
+                                )}
+                                <span className="text-xs font-medium text-gray-800">
+                                  {whatsappStatus.message}
+                                </span>
+                              </div>
+                            </div>
+                          )}
                         </div>
                       ) : (
                         <div className="flex flex-col gap-3 w-full max-w-sm">
@@ -511,7 +642,7 @@ export default function Home() {
                                 callState === "connecting" ||
                                 callState === "connected"
                               }
-                              className="bg-transparent border-none outline-none text-gray-900 px-3 py-2 flex-1 text-sm font-medium disabled:opacity-50"
+                              className="bg-transparent border-none outline-none text-gray-900 px-3 py-2 flex-1 text-sm font-medium w-0 min-w-0 disabled:opacity-50"
                             />
                             <button
                               onClick={handleMakeCall}
@@ -520,7 +651,7 @@ export default function Home() {
                                 callState === "connecting" ||
                                 callState === "connected"
                               }
-                              className="flex items-center gap-2 px-5 py-2.5 bg-gray-900 text-white rounded-full font-bold shadow-md hover:bg-gray-800 transition-colors text-sm disabled:opacity-50 disabled:cursor-not-allowed shrink-0"
+                              className="flex items-center gap-2 px-4 py-2.5 bg-gray-900 text-white rounded-full font-bold shadow-md hover:bg-gray-800 transition-colors text-sm disabled:opacity-50 disabled:cursor-not-allowed shrink-0 whitespace-nowrap"
                             >
                               {callState === "connecting" ? (
                                 <>
