@@ -27,10 +27,7 @@ const SimpleLoadingSpinner = () => (
   </div>
 );
 
-const Avatar3D = dynamic(() => import("./components/Avatar3D"), {
-  ssr: false,
-  loading: () => <SimpleLoadingSpinner />,
-});
+import Avatar3DSingleton from "./components/Avatar3DSingleton";
 
 const LiveKitWidget = dynamic(() => import("./components/LiveKitWidget"), {
   ssr: false,
@@ -320,11 +317,10 @@ export default function Home() {
     if (productId === "web") {
       return (
         <div className={`${isMobileView ? 'w-full h-32' : 'w-full max-w-xs h-48'} bg-white/40 rounded-xl border border-white/50 shadow-sm backdrop-blur-md overflow-hidden flex items-center justify-center`}>
-          {isActive && mounted && (
-            <Avatar3D
+          {mounted && isActive && (
+            <Avatar3DSingleton
               scale={isMobileView ? 0.8 : 1.2}
               position={[0, -1.15, 0]}
-              enableOrbitControls={false}
             />
           )}
         </div>

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useRef, useEffect, Suspense, useState } from "react";
+import { useRef, useEffect, Suspense, useState, useMemo } from "react";
 import { Canvas } from "@react-three/fiber";
 import {
   useGLTF,
@@ -20,6 +20,7 @@ interface Avatar3DProps {
   enableOrbitControls?: boolean;
   autoRotate?: boolean;
   className?: string;
+  onReady?: () => void;
 }
 
 /**
@@ -104,11 +105,14 @@ function AvatarLoadingSpinner() {
 function AvatarModel({
   scale = 1.2,
   position = [0, -1.5, 0],
+  onReady,
 }: {
   scale: number;
   position: [number, number, number];
+  onReady?: () => void;
 }) {
   const group = useRef<THREE.Group>(null);
+  const hasCalledReady = useRef(false);
 
   // Initialize with lazy state to avoid SSR issues
   const [prefersReducedMotion, setPrefersReducedMotion] = useState(() => {
@@ -124,6 +128,19 @@ function AvatarModel({
 
   // Set up animation system
   const { actions, mixer } = useAnimations(animations, group);
+
+  // Notify parent when model is ready
+  useEffect(() => {
+    if (scene && onReady && !hasCalledReady.current) {
+      hasCalledReady.current = true;
+      // Small delay to ensure rendering is complete
+      const timer = setTimeout(() => {
+        onReady();
+      }, 100);
+      return () => clearTimeout(timer);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [scene]); // Only depend on scene, not onReady
 
   // Listen for changes to prefers-reduced-motion
   useEffect(() => {
@@ -232,6 +249,7 @@ export default function Avatar3D({
   enableOrbitControls = false,
   autoRotate = false,
   className = "",
+  onReady,
 }: Avatar3DProps) {
   // Use lazy initialization to avoid setState in useEffect
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -251,7 +269,7 @@ export default function Avatar3D({
     return 1;
   });
 
-  const [contextLost, setContextLost] = useState(false);
+  const canvasInitialized = useRef(false);
 
   // Update pixel ratio on window resize (e.g., device rotation)
   useEffect(() => {
@@ -262,18 +280,6 @@ export default function Avatar3D({
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
   }, []);
-
-  // Handle WebGL context loss and restoration
-  const handleContextLost = (event: Event) => {
-    event.preventDefault();
-    setContextLost(true);
-    console.warn("WebGL context lost, attempting to restore...");
-  };
-
-  const handleContextRestored = () => {
-    setContextLost(false);
-    console.log("WebGL context restored successfully");
-  };
 
   // Show nothing during SSR or initial render
   if (hasWebGL === null) {
@@ -293,63 +299,56 @@ export default function Avatar3D({
     );
   }
 
-  // Show loading state if context is lost
-  if (contextLost) {
-    return (
-      <div className={`w-full h-full ${className}`}>
-        <AvatarLoadingSpinner />
-      </div>
-    );
-  }
-
   // Render 3D avatar with WebGL support
+  // Memoize the Canvas to prevent recreation on re-renders
+  const canvasElement = useMemo(() => (
+    <Canvas
+      camera={{ position: [0, 0, 3.5], fov: 45 }}
+      gl={{
+        antialias: true,
+        pixelRatio: pixelRatio,
+        alpha: true,
+        powerPreference: "high-performance",
+        failIfMajorPerformanceCaveat: false,
+      }}
+      style={{ background: "transparent" }}
+      onCreated={({ gl }) => {
+        if (canvasInitialized.current) {
+          return;
+        }
+        canvasInitialized.current = true;
+        gl.setClearColor(0x000000, 0);
+      }}
+      frameloop="always"
+    >
+      {/* Lighting setup */}
+      <ambientLight intensity={0.8} />
+      <directionalLight position={[5, 5, 5]} intensity={1} />
+
+      {/* Environment for realistic reflections */}
+      <Environment preset="sunset" />
+
+      {/* Suspense boundary for async model loading */}
+      <Suspense fallback={null}>
+        <AvatarModel scale={scale} position={position} onReady={onReady} />
+      </Suspense>
+
+      {/* Optional orbit controls */}
+      {enableOrbitControls && (
+        <OrbitControls
+          enableZoom={false}
+          enablePan={false}
+          autoRotate={autoRotate}
+          autoRotateSpeed={2}
+        />
+      )}
+    </Canvas>
+  ), [scale, position, enableOrbitControls, autoRotate, onReady, pixelRatio]);
+
   return (
     <div className={`w-full h-full ${className}`}>
       <AvatarErrorBoundary>
-        <Canvas
-          camera={{ position: [0, 0, 3.5], fov: 45 }}
-          gl={{
-            antialias: true,
-            pixelRatio: pixelRatio,
-            preserveDrawingBuffer: true,
-            alpha: true,
-          }}
-          style={{ background: "transparent" }}
-          onCreated={({ gl }) => {
-            gl.setClearColor(0x000000, 0);
-            // Add context loss/restore event listeners
-            gl.domElement.addEventListener(
-              "webglcontextlost",
-              handleContextLost,
-            );
-            gl.domElement.addEventListener(
-              "webglcontextrestored",
-              handleContextRestored,
-            );
-          }}
-        >
-          {/* Lighting setup */}
-          <ambientLight intensity={0.8} />
-          <directionalLight position={[5, 5, 5]} intensity={1} />
-
-          {/* Environment for realistic reflections */}
-          <Environment preset="sunset" />
-
-          {/* Suspense boundary for async model loading */}
-          <Suspense fallback={<AvatarLoadingSpinner />}>
-            <AvatarModel scale={scale} position={position} />
-          </Suspense>
-
-          {/* Optional orbit controls */}
-          {enableOrbitControls && (
-            <OrbitControls
-              enableZoom={false}
-              enablePan={false}
-              autoRotate={autoRotate}
-              autoRotateSpeed={2}
-            />
-          )}
-        </Canvas>
+        {canvasElement}
       </AvatarErrorBoundary>
     </div>
   );
