@@ -29,11 +29,17 @@ const SimpleLoadingSpinner = () => (
 
 import Avatar3DSingleton from "./components/Avatar3DSingleton";
 
+import AmbientBackground from "../components/AmbientBackground";
+import NavBar from "../components/NavBar";
+import VisionSection from "../components/VisionSection";
+import ServicesSection from "../components/ServicesSection";
+import TestimonialsSection from "../components/TestimonialsSection";
+import Footer from "../components/Footer";
+
 const LiveKitWidget = dynamic(() => import("./components/LiveKitWidget"), {
   ssr: false,
 });
 
-const NAV_ITEMS: string[] = ["Products", "Pricing", "AboutUs"];
 
 export default function Home() {
   const [activeId, setActiveId] = useState<string | null>("voice");
@@ -62,7 +68,6 @@ export default function Home() {
   // Mobile state
   const [isMobile, setIsMobile] = useState(false);
   const [expandedCard, setExpandedCard] = useState<string | null>("voice");
-  const [showMobileMenu, setShowMobileMenu] = useState(false);
   const [mounted, setMounted] = useState(false);
 
   // Check if mobile on mount and resize
@@ -166,7 +171,7 @@ export default function Home() {
     setCallState("connecting");
 
     try {
-      const response = await fetch("http://192.168.1.61:5002/makeCall", {
+      const response = await fetch("http://localhost:5002/makeCall", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -219,7 +224,7 @@ export default function Home() {
     const pollInterval = setInterval(async () => {
       try {
         const response = await fetch(
-          `http://192.168.1.61:5002/callStatus/${callId}`,
+          `http://localhost:5002/callStatus/${callId}`,
         );
         const data = await response.json();
 
@@ -361,57 +366,17 @@ export default function Home() {
   // Mobile View
   if (isMobile) {
     return (
-      <div className="h-screen w-full bg-[#F0F4F8] font-sans overflow-hidden relative flex flex-col">
-        {/* Mobile Ambient Background */}
-        <div className="absolute inset-0 pointer-events-none">
-          <div className="absolute top-[-10%] left-[-10%] w-[70vw] h-[70vw] bg-[#A0E1E1] rounded-full mix-blend-multiply filter blur-[80px] opacity-50 animate-blob"></div>
-          <div className="absolute bottom-[-10%] right-[-10%] w-[70vw] h-[70vw] bg-[#D4C4FB] rounded-full mix-blend-multiply filter blur-[80px] opacity-50 animate-blob animation-delay-2000"></div>
-        </div>
+      <div className="min-h-screen w-full bg-[#F0F4F8] font-sans overflow-hidden relative flex flex-col">
+        {/* --- BACKGROUND AMBIENT --- */}
+        <AmbientBackground />
 
-        {/* Mobile Header */}
-        <nav className="relative z-50 p-4 flex justify-between items-center">
-          <div className="flex items-center gap-2 px-4 py-2 bg-white/30 backdrop-blur-md rounded-full border border-white/40 shadow-lg">
-            <img
-              src="/assets/logo.jpeg"
-              alt="logo"
-              className="w-5 h-5 rounded object-cover"
-            />
-            <span className="text-gray-800 font-bold tracking-tight text-sm">
-              Afterlife
-            </span>
-          </div>
-          
-          {/* Mobile Menu Button */}
-          <button
-            onClick={() => setShowMobileMenu(!showMobileMenu)}
-            className="p-2 bg-white/30 backdrop-blur-md rounded-full border border-white/40 shadow-lg"
-          >
-            <div className="w-5 h-5 flex flex-col justify-center gap-1">
-              <div className={`w-5 h-0.5 bg-gray-800 transition-transform ${showMobileMenu ? 'rotate-45 translate-y-1.5' : ''}`}></div>
-              <div className={`w-5 h-0.5 bg-gray-800 transition-opacity ${showMobileMenu ? 'opacity-0' : ''}`}></div>
-              <div className={`w-5 h-0.5 bg-gray-800 transition-transform ${showMobileMenu ? '-rotate-45 -translate-y-1.5' : ''}`}></div>
-            </div>
-          </button>
-        </nav>
+        {/* --- HEADER --- */}
+        <NavBar />
 
-        {/* Mobile Menu Dropdown */}
-        {showMobileMenu && (
-          <div className="absolute top-20 right-4 z-50 bg-white/90 backdrop-blur-xl rounded-2xl border border-white/50 shadow-2xl p-4 w-48 animate-slide-down">
-            {NAV_ITEMS.map((item) => (
-              <button
-                key={item}
-                className="w-full text-left px-4 py-3 text-gray-700 hover:bg-black/5 rounded-xl transition-colors"
-                onClick={() => setShowMobileMenu(false)}
-              >
-                {item}
-              </button>
-            ))}
-          </div>
-        )}
-
-        {/* Main Content - Vertical Cards */}
-        <div className="flex-1 overflow-y-auto px-4 pb-6 pt-2 relative z-10">
-          <div className="flex flex-col gap-4">
+        {/* Scrollable Content */}
+        <div className="flex-1 overflow-y-auto z-10 relative scroll-smooth bg-transparent">
+          {/* Product Cards Section */}
+          <div className="px-4 pt-24 pb-8 space-y-4">
             {products.map((product) => {
               const isExpanded = expandedCard === product.id;
               
@@ -651,6 +616,12 @@ export default function Home() {
               );
             })}
           </div>
+
+          {/* --- NEW SECTIONS FOR MOBILE --- */}
+          <VisionSection />
+          <ServicesSection />
+          <TestimonialsSection />
+          <Footer />
         </div>
 
         {/* Mobile Avatar Widget */}
@@ -666,363 +637,347 @@ export default function Home() {
     );
   }
 
-  // Desktop View (Original - unchanged)
+  // Desktop View (Original - with modifications for scrolling)
   return (
-    <div className="h-screen w-full bg-[#F0F4F8] font-sans overflow-hidden relative flex flex-col">
+    <div className="min-h-screen w-full bg-[#F0F4F8] font-sans overflow-y-auto relative flex flex-col scroll-smooth">
       {/* --- BACKGROUND AMBIENT --- */}
-      <div className="absolute inset-0 pointer-events-none">
-        <div className="absolute top-[-10%] left-[-10%] w-[50vw] h-[50vw] bg-[#A0E1E1] rounded-full mix-blend-multiply filter blur-[100px] opacity-60 animate-blob"></div>
-        <div className="absolute bottom-[-10%] right-[-10%] w-[50vw] h-[50vw] bg-[#D4C4FB] rounded-full mix-blend-multiply filter blur-[100px] opacity-60 animate-blob animation-delay-2000"></div>
-        <div className="absolute top-[20%] left-[30%] w-[40vw] h-[40vw] bg-[#AFF8D8] rounded-full mix-blend-multiply filter blur-[100px] opacity-50 animate-blob animation-delay-4000"></div>
-      </div>
+      <AmbientBackground />
 
       {/* --- HEADER --- */}
-      <nav className="absolute top-0 left-0 w-full z-50 p-6 flex justify-between items-center">
-        <div className="flex items-center gap-2 px-4 py-2 bg-white/20 backdrop-blur-md rounded-full border border-white/30">
-          <img
-            src="/assets/logo.jpeg"
-            alt="logo"
-            className="w-6 h-6 rounded object-cover"
-          />
-          <span className="text-gray-800 font-bold tracking-tight">
-            Afterlife
-          </span>
-        </div>
-        <div className="hidden md:flex gap-8 text-sm font-medium text-gray-600 bg-white/20 backdrop-blur-md px-6 py-2 rounded-full border border-white/30">
-          {NAV_ITEMS.map((item) => (
-            <button
-              key={item}
-              className="group relative h-[1.2em] overflow-hidden"
-            >
-              <div className="flex flex-col transition-transform duration-300 ease-[cubic-bezier(0.25,1,0.5,1)] group-hover:-translate-y-[1.2em]">
-                <span className="flex items-center h-[1.2em]">{item}</span>
-                <span className="flex items-center h-[1.2em] text-black font-bold">
-                  {item}
-                </span>
-              </div>
-            </button>
-          ))}
-        </div>
-      </nav>
+      <NavBar />
 
-      {/* --- MAIN STAGE (Desktop) --- */}
-      <main className="flex-1 flex flex-col md:flex-row relative z-10 h-full p-4 md:p-6 gap-4 md:gap-6 pt-24 md:pt-24">
-        {products.map((product) => {
-          const isActive = activeId === product.id;
+      {/* --- HERO SECTION (Full Viewport) --- */}
+      <section className="h-screen w-full relative flex flex-col">
+        <main className="flex-1 flex flex-col md:flex-row relative z-10 h-full p-4 md:p-6 gap-4 md:gap-6 pt-24 md:pt-24">
+          {products.map((product) => {
+            const isActive = activeId === product.id;
 
-          return (
-            <div
-              key={product.id}
-              onMouseEnter={() => !isAnyAgentOpen && setActiveId(product.id)}
-              className={`
-                relative h-full transition-all duration-700 ease-[cubic-bezier(0.25,1,0.5,1)] rounded-[2rem] overflow-hidden cursor-pointer border border-white/40 shadow-2xl
-                ${isActive ? "flex-[3] md:flex-[2.5]" : "flex-1"}
-                group
-              `}
-            >
-              {/* IMAGE LAYER */}
-              <div className="absolute inset-0 overflow-hidden">
-                <img
-                  src={product.backgroundImage}
-                  alt=""
-                  className={`w-full h-full object-cover transition-all duration-700 ${isActive ? "opacity-20 scale-105" : "opacity-40 grayscale-[20%] scale-100"}`}
-                />
-                <div
-                  className={`absolute inset-0 bg-gradient-to-b from-white/80 via-white/40 to-white/10 ${isActive ? "backdrop-blur-xl" : "backdrop-blur-sm"}`}
-                ></div>
-              </div>
-
-              {/* GLOW LAYER */}
+            return (
               <div
-                className={`absolute inset-0 transition-opacity duration-700 ${isActive ? "opacity-100" : "opacity-0"} bg-gradient-to-b ${product.bgGlow} to-transparent mix-blend-overlay`}
-              ></div>
-
-              {/* CONTENT CONTAINER */}
-              <div className="relative h-full flex flex-col justify-end p-8 md:p-12 z-10 pb-20">
-                {/* POPULAR BADGE */}
-                {product.isPopular && (
+                key={product.id}
+                onMouseEnter={() => !isAnyAgentOpen && setActiveId(product.id)}
+                className={`
+                  relative h-full transition-all duration-700 ease-[cubic-bezier(0.25,1,0.5,1)] rounded-[2rem] overflow-hidden cursor-pointer border border-white/40 shadow-2xl
+                  ${isActive ? "flex-[3] md:flex-[2.5]" : "flex-1"}
+                  group
+                `}
+              >
+                {/* IMAGE LAYER */}
+                <div className="absolute inset-0 overflow-hidden">
+                  <img
+                    src={product.backgroundImage}
+                    alt=""
+                    className={`w-full h-full object-cover transition-all duration-700 ${isActive ? "opacity-20 scale-105" : "opacity-40 grayscale-[20%] scale-100"}`}
+                  />
                   <div
-                    className={`absolute top-12 right-12 z-20 px-3 py-1 bg-black/5 backdrop-blur-md border border-black/5 rounded-full flex items-center gap-1.5 transition-opacity duration-500 ${isActive ? "opacity-100" : "opacity-0"}`}
-                  >
-                    <Sparkles
-                      size={12}
-                      className="text-purple-600 fill-purple-600"
-                    />
-                    <span className="text-[10px] font-bold uppercase tracking-wider text-gray-800">
-                      Popular
-                    </span>
-                  </div>
-                )}
-
-                {/* ICON & ARROW */}
-                <div
-                  className={`absolute top-8 left-8 md:top-12 md:left-12 flex items-center justify-between w-[calc(100%-4rem)] transition-all duration-500`}
-                >
-                  <div
-                    className={`p-4 rounded-2xl bg-white/50 shadow-sm text-gray-800 transition-transform duration-500 ${isActive ? "scale-0" : "scale-90 origin-top-left"}`}
-                  >
-                    {product.icon}
-                  </div>
-                  <div
-                    className={`w-10 h-10 rounded-full border border-gray-800/10 flex items-center justify-center transition-all duration-500 ${isActive ? "rotate-90 bg-gray-900 text-white" : "rotate-0 bg-white/50 text-gray-600"}`}
-                  >
-                    <ChevronRight size={20} />
-                  </div>
+                    className={`absolute inset-0 bg-gradient-to-b from-white/80 via-white/40 to-white/10 ${isActive ? "backdrop-blur-xl" : "backdrop-blur-sm"}`}
+                  ></div>
                 </div>
 
-                {/* TEXT CONTENT BLOCK */}
-                <div className="min-w-[300px]">
-                  {/* TITLE */}
-                  <h2
-                    className={`font-bold text-gray-900 leading-none whitespace-nowrap transition-all duration-500 ${isActive ? "text-3xl md:text-4xl mb-4 translate-y-0" : "text-2xl md:text-3xl mb-2 translate-y-2"}`}
-                  >
-                    {product.title.split(" ")[0]}
-                    <br />
-                    <span
-                      className={`text-transparent bg-clip-text bg-gradient-to-r ${product.color} pb-1`}
-                    >
-                      {product.title.split(" ")[1]}
-                    </span>
-                  </h2>
+                {/* GLOW LAYER */}
+                <div
+                  className={`absolute inset-0 transition-opacity duration-700 ${isActive ? "opacity-100" : "opacity-0"} bg-gradient-to-b ${product.bgGlow} to-transparent mix-blend-overlay`}
+                ></div>
 
-                  {/* SHORT HIGHLIGHT (Inactive State) */}
+                {/* CONTENT CONTAINER */}
+                <div className="relative h-full flex flex-col justify-end p-8 md:p-12 z-10 pb-20">
+                  {/* POPULAR BADGE */}
+                  {product.isPopular && (
+                    <div
+                      className={`absolute top-12 right-12 z-20 px-3 py-1 bg-black/5 backdrop-blur-md border border-black/5 rounded-full flex items-center gap-1.5 transition-opacity duration-500 ${isActive ? "opacity-100" : "opacity-0"}`}
+                    >
+                      <Sparkles
+                        size={12}
+                        className="text-purple-600 fill-purple-600"
+                      />
+                      <span className="text-[10px] font-bold uppercase tracking-wider text-gray-800">
+                        Popular
+                      </span>
+                    </div>
+                  )}
+
+                  {/* ICON & ARROW */}
                   <div
-                    className={`transition-all duration-500 ${!isActive ? "opacity-100 h-auto" : "opacity-0 h-0 overflow-hidden"}`}
+                    className={`absolute top-8 left-8 md:top-12 md:left-12 flex items-center justify-between w-[calc(100%-4rem)] transition-all duration-500`}
                   >
-                    <p className="text-sm text-gray-700 font-medium leading-relaxed max-w-[200px]">
-                      {product.shortHighlight}
-                    </p>
+                    <div
+                      className={`p-4 rounded-2xl bg-white/50 shadow-sm text-gray-800 transition-transform duration-500 ${isActive ? "scale-0" : "scale-90 origin-top-left"}`}
+                    >
+                      {product.icon}
+                    </div>
+                    <div
+                      className={`w-10 h-10 rounded-full border border-gray-800/10 flex items-center justify-center transition-all duration-500 ${isActive ? "rotate-90 bg-gray-900 text-white" : "rotate-0 bg-white/50 text-gray-600"}`}
+                    >
+                      <ChevronRight size={20} />
+                    </div>
                   </div>
 
-                  {/* FULL DESCRIPTION (Active State) */}
-                  <div
-                    className={`transition-all duration-700 ease-out overflow-hidden ${isActive ? "max-h-[500px] opacity-100" : "max-h-0 opacity-0"}`}
-                  >
-                    <p className="text-base md:text-lg text-gray-700 leading-relaxed mb-6 max-w-md font-medium">
-                      {product.description}
-                    </p>
+                  {/* TEXT CONTENT BLOCK */}
+                  <div className="min-w-[300px]">
+                    {/* TITLE */}
+                    <h2
+                      className={`font-bold text-gray-900 leading-none whitespace-nowrap transition-all duration-500 ${isActive ? "text-3xl md:text-4xl mb-4 translate-y-0" : "text-2xl md:text-3xl mb-2 translate-y-2"}`}
+                    >
+                      {product.title.split(" ")[0]}
+                      <br />
+                      <span
+                        className={`text-transparent bg-clip-text bg-gradient-to-r ${product.color} pb-1`}
+                      >
+                        {product.title.split(" ")[1]}
+                      </span>
+                    </h2>
 
-                    {/* MOCKUP CONTAINER */}
-                    <div className="mb-6">
-                      {renderMockup(product.id, isActive, false)}
+                    {/* SHORT HIGHLIGHT (Inactive State) */}
+                    <div
+                      className={`transition-all duration-500 ${!isActive ? "opacity-100 h-auto" : "opacity-0 h-0 overflow-hidden"}`}
+                    >
+                      <p className="text-sm text-gray-700 font-medium leading-relaxed max-w-[200px]">
+                        {product.shortHighlight}
+                      </p>
                     </div>
 
-                    {/* CTA BUTTONS */}
-                    <div className="pt-2">
-                      {product.id === "web" ? (
-                        <button
-                          onClick={() => {
-                            setShowAvatarWidget(true);
-                            setIsAnyAgentOpen(true);
-                          }}
-                          className="flex items-center gap-2 px-8 py-4 bg-gray-900 text-white rounded-full font-bold shadow-lg hover:bg-gray-800 transition-colors"
-                        >
-                          <span>Try Agent</span>
-                          <ArrowRight size={18} />
-                        </button>
-                      ) : product.id === "whatsapp" ? (
-                        <div
-                          className="flex flex-col gap-3 w-full max-w-sm"
-                          onClick={(e) => e.stopPropagation()}
-                        >
-                          <div className="flex items-center justify-between bg-white/40 border border-white/50 backdrop-blur-md rounded-xl p-2 px-3 shadow-sm">
-                            <div
-                              className="flex flex-col cursor-pointer"
-                              onClick={() => {
-                                navigator.clipboard.writeText("+17178976546");
-                                setCopySuccess(true);
-                                setTimeout(() => setCopySuccess(false), 2000);
-                              }}
-                              title="Click to copy"
-                            >
-                              <span className="text-[10px] uppercase text-gray-500 font-bold tracking-wider">
-                                {copySuccess ? "Copied!" : "Message Us"}
-                              </span>
-                              <span className="text-sm font-mono font-bold text-gray-800 hover:text-green-600 transition-colors">
-                                +17178976546
-                              </span>
-                            </div>
-                            <button
-                              onClick={() =>
-                                window.open(
-                                  "https://wa.me/17178976546?text=Hello",
-                                  "_blank",
-                                )
-                              }
-                              className="p-2 bg-[#25D366] text-white rounded-full shadow-md hover:bg-[#128C7E] transition-colors"
-                              title="Chat on WhatsApp"
-                            >
-                              <MessageCircle size={16} />
-                            </button>
-                          </div>
+                    {/* FULL DESCRIPTION (Active State) */}
+                    <div
+                      className={`transition-all duration-700 ease-out overflow-hidden ${isActive ? "max-h-[500px] opacity-100" : "max-h-0 opacity-0"}`}
+                    >
+                      <p className="text-base md:text-lg text-gray-700 leading-relaxed mb-6 max-w-md font-medium">
+                        {product.description}
+                      </p>
 
-                          <div className="flex items-center gap-2 px-2">
-                            <div className="h-px bg-gray-300 flex-1"></div>
-                            <span className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">
-                              OR
-                            </span>
-                            <div className="h-px bg-gray-300 flex-1"></div>
-                          </div>
-                          
-                          <div className="flex items-center gap-1 p-1.5 bg-white/60 border border-white/50 backdrop-blur-md rounded-full shadow-sm">
-                            <CountryCodeSelect
-                              value={selectedCountry}
-                              onChange={setSelectedCountry}
-                            />
-                            <input
-                              type="tel"
-                              placeholder="Your Number"
-                              className="bg-transparent text-black outline-none px-3 py-2 flex-1 text-sm font-medium w-0 min-w-0"
-                              value={whatsappNumber}
-                              onChange={(e) =>
-                                setWhatsappNumber(e.target.value)
-                              }
-                              onKeyDown={(e) => {
-                                if (e.key === "Enter" && !isWhatsappLoading) {
-                                  handleWhatsappDemo();
+                      {/* MOCKUP CONTAINER */}
+                      <div className="mb-6">
+                        {renderMockup(product.id, isActive, false)}
+                      </div>
+
+                      {/* CTA BUTTONS */}
+                      <div className="pt-2">
+                        {product.id === "web" ? (
+                          <button
+                            onClick={() => {
+                              setShowAvatarWidget(true);
+                              setIsAnyAgentOpen(true);
+                            }}
+                            className="flex items-center gap-2 px-8 py-4 bg-gray-900 text-white rounded-full font-bold shadow-lg hover:bg-gray-800 transition-colors"
+                          >
+                            <span>Try Agent</span>
+                            <ArrowRight size={18} />
+                          </button>
+                        ) : product.id === "whatsapp" ? (
+                          <div
+                            className="flex flex-col gap-3 w-full max-w-sm"
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            <div className="flex items-center justify-between bg-white/40 border border-white/50 backdrop-blur-md rounded-xl p-2 px-3 shadow-sm">
+                              <div
+                                className="flex flex-col cursor-pointer"
+                                onClick={() => {
+                                  navigator.clipboard.writeText("+17178976546");
+                                  setCopySuccess(true);
+                                  setTimeout(() => setCopySuccess(false), 2000);
+                                }}
+                                title="Click to copy"
+                              >
+                                <span className="text-[10px] uppercase text-gray-500 font-bold tracking-wider">
+                                  {copySuccess ? "Copied!" : "Message Us"}
+                                </span>
+                                <span className="text-sm font-mono font-bold text-gray-800 hover:text-green-600 transition-colors">
+                                  +17178976546
+                                </span>
+                              </div>
+                              <button
+                                onClick={() =>
+                                  window.open(
+                                    "https://wa.me/17178976546?text=Hello",
+                                    "_blank",
+                                  )
                                 }
-                              }}
-                              disabled={isWhatsappLoading}
-                            />
-                            <button
-                              onClick={handleWhatsappDemo}
-                              disabled={isWhatsappLoading}
-                              className="flex items-center gap-2 px-6 py-2 bg-gray-900 text-white rounded-full font-bold hover:bg-gray-800 transition-all disabled:opacity-50 whitespace-nowrap shrink-0"
-                            >
-                              {isWhatsappLoading ? "Sending..." : "Get Demo"}
-                              <ArrowRight size={16} />
-                            </button>
-                          </div>
-
-                          {whatsappStatus.type && (
-                            <div
-                              className={`px-4 py-2.5 rounded-xl backdrop-blur-md border shadow-sm transition-all duration-300 animate-slide-up ${
-                                whatsappStatus.type === "success"
-                                  ? "bg-white/40 border-white/50"
-                                  : "bg-white/40 border-white/50"
-                              }`}
-                            >
-                              <div className="flex items-center gap-2">
-                                {whatsappStatus.type === "success" ? (
-                                  <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse shrink-0" />
-                                ) : (
-                                  <div className="w-2 h-2 bg-red-500 rounded-full shrink-0" />
-                                )}
-                                <span className="text-xs font-medium text-gray-800">
-                                  {whatsappStatus.message}
-                                </span>
-                              </div>
+                                className="p-2 bg-[#25D366] text-white rounded-full shadow-md hover:bg-[#128C7E] transition-colors"
+                                title="Chat on WhatsApp"
+                              >
+                                <MessageCircle size={16} />
+                              </button>
                             </div>
-                          )}
-                        </div>
-                      ) : (
-                        <div className="flex flex-col gap-3 w-full max-w-sm">
-                          <div className="flex items-center gap-1 p-1.5 bg-white/40 border border-white/50 backdrop-blur-md rounded-full shadow-sm focus-within:ring-2 focus-within:ring-gray-900/20">
-                            <CountryCodeSelect
-                              value={selectedCountry}
-                              onChange={setSelectedCountry}
-                              disabled={
-                                isCallLoading ||
-                                callState === "connecting" ||
-                                callState === "connected"
-                              }
-                            />
-                            <div className="w-px h-6 bg-gray-300/50"></div>
-                            <input
-                              type="tel"
-                              placeholder="555 000 0000"
-                              value={phoneNumber}
-                              onChange={(e) => {
-                                const value = e.target.value.replace(
-                                  /[^\d\s()-]/g,
-                                  "",
-                                );
-                                setPhoneNumber(value);
-                              }}
-                              onKeyDown={(e) => {
-                                if (e.key === "Enter" && !isCallLoading) {
-                                  handleMakeCall();
+
+                            <div className="flex items-center gap-2 px-2">
+                              <div className="h-px bg-gray-300 flex-1"></div>
+                              <span className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">
+                                OR
+                              </span>
+                              <div className="h-px bg-gray-300 flex-1"></div>
+                            </div>
+                            
+                            <div className="flex items-center gap-1 p-1.5 bg-white/60 border border-white/50 backdrop-blur-md rounded-full shadow-sm">
+                              <CountryCodeSelect
+                                value={selectedCountry}
+                                onChange={setSelectedCountry}
+                              />
+                              <input
+                                type="tel"
+                                placeholder="Your Number"
+                                className="bg-transparent text-black outline-none px-3 py-2 flex-1 text-sm font-medium w-0 min-w-0"
+                                value={whatsappNumber}
+                                onChange={(e) =>
+                                  setWhatsappNumber(e.target.value)
                                 }
-                              }}
-                              disabled={
-                                isCallLoading ||
-                                callState === "connecting" ||
-                                callState === "connected"
-                              }
-                              className="bg-transparent border-none outline-none text-gray-900 px-3 py-2 flex-1 text-sm font-medium w-0 min-w-0 disabled:opacity-50"
-                            />
-                            <button
-                              onClick={handleMakeCall}
-                              disabled={
-                                isCallLoading ||
-                                callState === "connecting" ||
-                                callState === "connected"
-                              }
-                              className="flex items-center gap-2 px-4 py-2.5 bg-gray-900 text-white rounded-full font-bold shadow-md hover:bg-gray-800 transition-colors text-sm disabled:opacity-50 disabled:cursor-not-allowed shrink-0 whitespace-nowrap"
-                            >
-                              {callState === "connecting" ? (
-                                <>
-                                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white" />
-                                  Connecting...
-                                </>
-                              ) : callState === "connected" ? (
-                                <>
-                                  <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse" />
-                                  Connected
-                                </>
-                              ) : callState === "disconnected" ? (
-                                <>
-                                  Call Again <ArrowRight size={16} />
-                                </>
-                              ) : (
-                                <>
-                                  Call Me <ArrowRight size={16} />
-                                </>
-                              )}
-                            </button>
+                                onKeyDown={(e) => {
+                                  if (e.key === "Enter" && !isWhatsappLoading) {
+                                    handleWhatsappDemo();
+                                  }
+                                }}
+                                disabled={isWhatsappLoading}
+                              />
+                              <button
+                                onClick={handleWhatsappDemo}
+                                disabled={isWhatsappLoading}
+                                className="flex items-center gap-2 px-6 py-2 bg-gray-900 text-white rounded-full font-bold hover:bg-gray-800 transition-all disabled:opacity-50 whitespace-nowrap shrink-0"
+                              >
+                                {isWhatsappLoading ? "Sending..." : "Get Demo"}
+                                <ArrowRight size={16} />
+                              </button>
+                            </div>
+
+                            {whatsappStatus.type && (
+                              <div
+                                className={`px-4 py-2.5 rounded-xl backdrop-blur-md border shadow-sm transition-all duration-300 animate-slide-up ${
+                                  whatsappStatus.type === "success"
+                                    ? "bg-white/40 border-white/50"
+                                    : "bg-white/40 border-white/50"
+                                }`}
+                              >
+                                <div className="flex items-center gap-2">
+                                  {whatsappStatus.type === "success" ? (
+                                    <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse shrink-0" />
+                                  ) : (
+                                    <div className="w-2 h-2 bg-red-500 rounded-full shrink-0" />
+                                  )}
+                                  <span className="text-xs font-medium text-gray-800">
+                                    {whatsappStatus.message}
+                                  </span>
+                                </div>
+                              </div>
+                            )}
                           </div>
-
-                          {callStatus.type && (
-                            <div
-                              className={`px-4 py-2.5 rounded-xl backdrop-blur-md border shadow-sm transition-all duration-300 animate-slide-up ${
-                                callStatus.type === "success"
-                                  ? "bg-white/40 border-white/50"
-                                  : "bg-white/40 border-white/50"
-                              }`}
-                            >
-                              <div className="flex items-center gap-2">
-                                {callStatus.type === "success" ? (
-                                  <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse shrink-0" />
+                        ) : (
+                          <div className="flex flex-col gap-3 w-full max-w-sm">
+                            <div className="flex items-center gap-1 p-1.5 bg-white/40 border border-white/50 backdrop-blur-md rounded-full shadow-sm focus-within:ring-2 focus-within:ring-gray-900/20">
+                              <CountryCodeSelect
+                                value={selectedCountry}
+                                onChange={setSelectedCountry}
+                                disabled={
+                                  isCallLoading ||
+                                  callState === "connecting" ||
+                                  callState === "connected"
+                                }
+                              />
+                              <div className="w-px h-6 bg-gray-300/50"></div>
+                              <input
+                                type="tel"
+                                placeholder="555 000 0000"
+                                value={phoneNumber}
+                                onChange={(e) => {
+                                  const value = e.target.value.replace(
+                                    /[^\d\s()-]/g,
+                                    "",
+                                  );
+                                  setPhoneNumber(value);
+                                }}
+                                onKeyDown={(e) => {
+                                  if (e.key === "Enter" && !isCallLoading) {
+                                    handleMakeCall();
+                                  }
+                                }}
+                                disabled={
+                                  isCallLoading ||
+                                  callState === "connecting" ||
+                                  callState === "connected"
+                                }
+                                className="bg-transparent border-none outline-none text-gray-900 px-3 py-2 flex-1 text-sm font-medium w-0 min-w-0 disabled:opacity-50"
+                              />
+                              <button
+                                onClick={handleMakeCall}
+                                disabled={
+                                  isCallLoading ||
+                                  callState === "connecting" ||
+                                  callState === "connected"
+                                }
+                                className="flex items-center gap-2 px-4 py-2.5 bg-gray-900 text-white rounded-full font-bold shadow-md hover:bg-gray-800 transition-colors text-sm disabled:opacity-50 disabled:cursor-not-allowed shrink-0 whitespace-nowrap"
+                              >
+                                {callState === "connecting" ? (
+                                  <>
+                                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white" />
+                                    Connecting...
+                                  </>
+                                ) : callState === "connected" ? (
+                                  <>
+                                    <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse" />
+                                    Connected
+                                  </>
+                                ) : callState === "disconnected" ? (
+                                  <>
+                                    Call Again <ArrowRight size={16} />
+                                  </>
                                 ) : (
-                                  <div className="w-2 h-2 bg-red-500 rounded-full shrink-0" />
+                                  <>
+                                    Call Me <ArrowRight size={16} />
+                                  </>
                                 )}
-                                <span className="text-xs font-medium text-gray-800">
-                                  {callStatus.message}
-                                </span>
-                              </div>
+                              </button>
                             </div>
-                          )}
 
-                          {callState === "disconnected" && !callStatus.type && (
-                            <div className="px-4 py-2.5 rounded-xl backdrop-blur-md border bg-white/40 border-white/50 shadow-sm">
-                              <div className="flex items-center gap-2">
-                                <div className="w-2 h-2 bg-orange-500 rounded-full shrink-0" />
-                                <span className="text-xs font-medium text-gray-800">
-                                  Call Disconnected - Ready for next call
-                                </span>
+                            {callStatus.type && (
+                              <div
+                                className={`px-4 py-2.5 rounded-xl backdrop-blur-md border shadow-sm transition-all duration-300 animate-slide-up ${
+                                  callStatus.type === "success"
+                                    ? "bg-white/40 border-white/50"
+                                    : "bg-white/40 border-white/50"
+                                }`}
+                              >
+                                <div className="flex items-center gap-2">
+                                  {callStatus.type === "success" ? (
+                                    <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse shrink-0" />
+                                  ) : (
+                                    <div className="w-2 h-2 bg-red-500 rounded-full shrink-0" />
+                                  )}
+                                  <span className="text-xs font-medium text-gray-800">
+                                    {callStatus.message}
+                                  </span>
+                                </div>
                               </div>
-                            </div>
-                          )}
-                        </div>
-                      )}
+                            )}
+
+                            {callState === "disconnected" && !callStatus.type && (
+                              <div className="px-4 py-2.5 rounded-xl backdrop-blur-md border bg-white/40 border-white/50 shadow-sm">
+                                <div className="flex items-center gap-2">
+                                  <div className="w-2 h-2 bg-orange-500 rounded-full shrink-0" />
+                                  <span className="text-xs font-medium text-gray-800">
+                                    Call Disconnected - Ready for next call
+                                  </span>
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        )}
+                      </div>
                     </div>
                   </div>
                 </div>
               </div>
-            </div>
-          );
-        })}
-      </main>
+            );
+          })}
+        </main>
+      </section>
+
+      {/* --- VISION SECTION --- */}
+      <VisionSection />
+
+      {/* --- SERVICES SECTION --- */}
+      <ServicesSection />
+
+      {/* --- TESTIMONIALS SECTION --- */}
+      <TestimonialsSection />
+
+      {/* --- FOOTER --- */}
+      <Footer />
 
       {/* --- AVATAR WIDGET --- */}
       {showAvatarWidget && mounted && (
@@ -1033,487 +988,9 @@ export default function Home() {
           }}
         />
       )}
-
-      <style jsx global>{`
-        @keyframes blob {
-          0% {
-            transform: translate(0px, 0px) scale(1);
-          }
-          33% {
-            transform: translate(30px, -50px) scale(1.1);
-          }
-          66% {
-            transform: translate(-20px, 20px) scale(0.9);
-          }
-          100% {
-            transform: translate(0px, 0px) scale(1);
-          }
-        }
-        .animate-blob {
-          animation: blob 7s infinite;
-        }
-        @keyframes slide-up {
-          from {
-            opacity: 0;
-            transform: translateY(20px);
-          }
-          to {
-            opacity: 1;
-            transform: translateY(0);
-          }
-        }
-        .animate-slide-up {
-          animation: slide-up 0.3s ease-out;
-        }
-        @keyframes slide-down {
-          from {
-            opacity: 0;
-            transform: translateY(-20px);
-          }
-          to {
-            opacity: 1;
-            transform: translateY(0);
-          }
-        }
-        .animate-slide-down {
-          animation: slide-down 0.3s ease-out;
-        }
-      `}</style>
     </div>
   );
 }
-// -------------------------------------old code--------------------------------------------
-
-// "use client";
-
-// import { useState } from "react";
-// import dynamic from "next/dynamic";
-// import {
-//   Monitor,
-//   MessageCircle,
-//   Mic,
-//   ArrowRight,
-//   Sparkles,
-//   ChevronRight,
-// } from "lucide-react";
-// import CountryCodeSelect, {
-//   DEFAULT_COUNTRY,
-//   type Country,
-// } from "./components/CountryCodeSelect";
-
-// const Avatar3D = dynamic(() => import("./components/Avatar3D"), {
-//   ssr: false,
-//   loading: () => (
-//     <div className="w-full h-full flex items-center justify-center bg-white/20 backdrop-blur-sm rounded-xl">
-//       <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500" />
-//     </div>
-//   ),
-// });
-
-// const LiveKitWidget = dynamic(() => import("./components/LiveKitWidget"), {
-//   ssr: false,
-// });
-
-// const NAV_ITEMS: string[] = ["Products", "Pricing", "AboutUs"];
-
-// export default function Home() {
-//   const [activeId, setActiveId] = useState<string | null>("voice");
-//   const [showAvatarWidget, setShowAvatarWidget] = useState(false);
-//   const [isAnyAgentOpen, setIsAnyAgentOpen] = useState(false);
-//   const [selectedCountry, setSelectedCountry] =
-//     useState<Country>(DEFAULT_COUNTRY);
-//   const [phoneNumber, setPhoneNumber] = useState("");
-//   const [whatsappNumber, setWhatsappNumber] = useState("");
-//   const [isWhatsappLoading, setIsWhatsappLoading] = useState(false);
-//   const [isCallLoading, setIsCallLoading] = useState(false);
-//   const [callStatus, setCallStatus] = useState<{
-//     type: "success" | "error" | null;
-//     message: string;
-//   }>({ type: null, message: "" });
-//   const [callState, setCallState] = useState<
-//     "idle" | "connecting" | "connected" | "disconnected"
-//   >("idle");
-//   const [currentCallId, setCurrentCallId] = useState<string | null>(null);
-//   const [copySuccess, setCopySuccess] = useState(false);
-//   const [whatsappStatus, setWhatsappStatus] = useState<{
-//     type: "success" | "error" | null;
-//     message: string;
-//   }>({ type: null, message: "" });
-
-//   // Function to trigger the Professional WhatsApp Template
-//   // Function to trigger the Professional WhatsApp Template
-//   const handleWhatsappDemo = async () => {
-//     // Enhanced Validation: Check number length based on country
-//     const cleanedNumber = whatsappNumber.replace(/\D/g, "");
-    
-//     // Simple length check based on country code (example: US/Canada needs 10 digits)
-//     // You can expand this with a more robust library like libphonenumber-js if needed
-//     const MIN_LENGTH = selectedCountry.code === "US" || selectedCountry.code === "CA" || selectedCountry.code === "IN" ? 10 : 8;
-//     const MAX_LENGTH = 15;
-
-//     if (!whatsappNumber.trim() || cleanedNumber.length < MIN_LENGTH || cleanedNumber.length > MAX_LENGTH) {
-//       setWhatsappStatus({
-//         type: "error",
-//         message: `Please enter a valid ${selectedCountry.name} number (${MIN_LENGTH}-${MAX_LENGTH} digits)`,
-//       });
-//       setTimeout(() => setWhatsappStatus({ type: null, message: "" }), 3000);
-//       return;
-//     }
-
-//     setIsWhatsappLoading(true);
-//     setWhatsappStatus({ type: null, message: "" }); // Clear previous status
-
-//     const fullNumber = `${selectedCountry.dialCode}${cleanedNumber}`;
-
-//     try {
-//       //For production use procuction link here
-//       const response = await fetch("http://localhost:8000/whatsappDemo", {
-//         method: "POST",
-//         headers: { "Content-Type": "application/json" },
-//         body: JSON.stringify({ phone_number: fullNumber }),
-//       });
-
-//       const data = await response.json();
-//       if (data.success) {
-//         setWhatsappStatus({
-//           type: "success",
-//           message: `Template sent to ${fullNumber}!`,
-//         });
-//         setWhatsappNumber("");
-//       } else {
-//         setWhatsappStatus({
-//           type: "error",
-//           message: `Error: ${data.error}`,
-//         });
-//       }
-//     } catch (err) {
-//       setWhatsappStatus({
-//         type: "error",
-//         message: "Backend server is not responding.",
-//       });
-//     } finally {
-//       setIsWhatsappLoading(false);
-//       // Auto-dismiss success/error after 5 seconds
-//       setTimeout(() => {
-//         setWhatsappStatus((prev) =>
-//           prev.type === "success" ? { type: null, message: "" } : prev,
-//         );
-//       }, 5000);
-//     }
-//   };
-
-//   const handleMakeCall = async () => {
-//     // Prevent multiple simultaneous calls
-//     if (callState === "connecting" || callState === "connected") {
-//       setCallStatus({
-//         type: "error",
-//         message: "Please wait for the current call to finish",
-//       });
-//       // Auto-dismiss after 3 seconds
-//       setTimeout(() => {
-//         setCallStatus({ type: null, message: "" });
-//       }, 3000);
-//       return;
-//     }
-
-//     if (!phoneNumber.trim()) {
-//       setCallStatus({
-//         type: "error",
-//         message: "Please enter a phone number",
-//       });
-//       // Auto-dismiss after 3 seconds
-//       setTimeout(() => {
-//         setCallStatus({ type: null, message: "" });
-//       }, 3000);
-//       return;
-//     }
-
-//     // Construct full phone number with country code
-//     const fullPhoneNumber = `${selectedCountry.dialCode}${phoneNumber}`;
-
-//     setIsCallLoading(true);
-//     setCallStatus({ type: null, message: "" });
-//     setCallState("connecting");
-
-//     try {
-//       const response = await fetch("http://192.168.1.61:5002/makeCall", {
-//         method: "POST",
-//         headers: {
-//           "Content-Type": "application/json",
-//         },
-//         body: JSON.stringify({ phone_number: fullPhoneNumber }),
-//       });
-
-//       const data = await response.json();
-
-//       if (response.ok && data.success) {
-//         setCallStatus({
-//           type: "success",
-//           message: `Call connecting to ${fullPhoneNumber}...`,
-//         });
-//         setCurrentCallId(data.call_id || fullPhoneNumber);
-//         setIsAnyAgentOpen(true);
-//         // Start polling for call status
-//         pollCallStatus(data.call_id || fullPhoneNumber);
-
-//         // Auto-dismiss after 3 seconds
-//         setTimeout(() => {
-//           setCallStatus({ type: null, message: "" });
-//         }, 3000);
-//       } else {
-//         setCallStatus({
-//           type: "error",
-//           message: data.error || "Failed to initiate call",
-//         });
-//         setCallState("idle");
-//         // Auto-dismiss after 3 seconds
-//         setTimeout(() => {
-//           setCallStatus({ type: null, message: "" });
-//         }, 3000);
-//       }
-//     } catch (error) {
-//       setCallStatus({
-//         type: "error",
-//         message: "Network error.",
-//       });
-//       setCallState("idle");
-//       // Auto-dismiss after 3 seconds
-//       setTimeout(() => {
-//         setCallStatus({ type: null, message: "" });
-//       }, 3000);
-//     } finally {
-//       setIsCallLoading(false);
-//     }
-//   };
-
-//   const pollCallStatus = async (callId: string) => {
-//     let hasTransitionedToConnected = false; // Track if we've already transitioned
-//     let wasConnected = false; // Track if call was ever connected
-
-//     const pollInterval = setInterval(async () => {
-//       try {
-//         const response = await fetch(
-//           `http://192.168.1.61:5002/callStatus/${callId}`,
-//         );
-//         const data = await response.json();
-
-//         if (data.status === "connected") {
-//           if (!hasTransitionedToConnected) {
-//             wasConnected = true;
-//             setCallState("connected");
-//             setCallStatus({
-//               type: "success",
-//               message: "Call connected!",
-//             });
-//             hasTransitionedToConnected = true;
-
-//             // Auto-dismiss notification after 3 seconds
-//             setTimeout(() => {
-//               setCallStatus({ type: null, message: "" });
-//             }, 3000);
-//           }
-//         } else if (data.status === "disconnected" || data.status === "failed") {
-//           setCallState("disconnected");
-//           setCallStatus({
-//             type: "error",
-//             message: wasConnected ? "Call disconnected" : "No answer",
-//           });
-//           clearInterval(pollInterval);
-//           // Re-enable hover on other cards after call ends
-//           setIsAnyAgentOpen(false);
-//           // Auto-dismiss notification after 3 seconds
-//           setTimeout(() => {
-//             setCallStatus({ type: null, message: "" });
-//           }, 3000);
-//         }
-//       } catch (error) {
-//         console.error("Error polling call status:", error);
-//       }
-//     }, 2000); // Poll every 2 seconds
-
-//     // Stop polling after 2 minutes (timeout)
-//     setTimeout(() => {
-//       clearInterval(pollInterval);
-//       if (callState === "connecting") {
-//         setCallState("disconnected");
-//         setCallStatus({
-//           type: "error",
-//           message: "No answer",
-//         });
-//         // Re-enable hover on other cards after timeout
-//         setIsAnyAgentOpen(false);
-//         // Auto-dismiss notification after 3 seconds
-//         setTimeout(() => {
-//           setCallStatus({ type: null, message: "" });
-//         }, 3000);
-//       }
-//     }, 120000);
-//   };
-
-//   const products = [
-//     {
-//       id: "whatsapp",
-//       title: "WhatsApp Agent",
-//       subtitle: "Automated Messaging",
-//       description:
-//         "Scale your outreach on the worlds most popular app. Perfect for sales qualification and instant support.",
-//       shortHighlight: "Automate sales and support on WhatsApp instantly.",
-//       backgroundImage: "/assets/whatsapp-agent-bg.png",
-//       icon: <MessageCircle className="w-8 h-8" />,
-//       color: "from-green-400 to-emerald-300",
-//       bgGlow: "bg-green-400/20",
-//     },
-//     {
-//       id: "voice",
-//       title: "Calling Agent",
-//       isPopular: true,
-//       subtitle: "Human-like Voice AI",
-//       description:
-//         "Zero-latency voice processing that handles interruptions, accents, and complex logic flows naturally.",
-//       shortHighlight: "Zero-latency voice interactions. Handles interruptions.",
-//       backgroundImage: "/assets/voice-agent-bg.png",
-//       icon: <Mic className="w-8 h-8" />,
-//       color: "from-purple-400 to-pink-300",
-//       bgGlow: "bg-purple-400/20",
-//     },
-//     {
-//       id: "web",
-//       title: "Web Agent",
-//       subtitle: "Context-aware Site Assistance",
-//       description:
-//         "Embeds directly into your DOM to understand user journey and provide instant, context-aware support.",
-//       shortHighlight: "Seamlessly integrates with your website. Context-aware.",
-//       backgroundImage: "/assets/web-agent-bg.png",
-//       icon: <Monitor className="w-8 h-8" />,
-//       color: "from-blue-400 to-cyan-300",
-//       bgGlow: "bg-cyan-400/20",
-//     },
-//   ];
-
-//   // Render mockup based on product ID and active state
-//   const renderMockup = (productId: string, isActive: boolean) => {
-//     if (productId === "web") {
-//       return (
-//         <div className="w-full max-w-xs h-48 bg-white/40 rounded-xl border border-white/50 shadow-sm backdrop-blur-md overflow-hidden flex items-center justify-center">
-//           {isActive && (
-//             <Avatar3D
-//               scale={1.2}
-//               position={[0, -1.15, 0]}
-//               enableOrbitControls={false}
-//             />
-//           )}
-//         </div>
-//       );
-//     }
-
-//     if (productId === "voice") {
-//       return (
-//         <div className="w-full max-w-xs flex items-center justify-center gap-4">
-//           <div className="w-12 h-12 rounded-full bg-white/60 flex items-center justify-center shadow-lg animate-pulse">
-//             <div className="w-3 h-3 bg-purple-600 rounded-full"></div>
-//           </div>
-//           <div className="flex flex-col gap-1">
-//             <div className="w-24 h-2 bg-gray-800/10 rounded-full"></div>
-//             <div className="w-16 h-2 bg-gray-800/10 rounded-full"></div>
-//           </div>
-//         </div>
-//       );
-//     }
-
-//     if (productId === "whatsapp") {
-//       return (
-//         <div className="w-full max-w-xs bg-[#E5DDD5]/80 rounded-xl p-3 border border-white/50 shadow-sm backdrop-blur-sm relative overflow-hidden">
-//           <div className="absolute inset-0 opacity-10 bg-black"></div>
-//           <div className="relative z-10 bg-white p-2 rounded-lg shadow-sm text-xs mb-2 w-3/4 ml-auto rounded-tr-none">
-//             Hey! Can I schedule a demo?
-//           </div>
-//           <div className="relative z-10 bg-[#DCF8C6] p-2 rounded-lg shadow-sm text-xs w-3/4 mr-auto rounded-tl-none">
-//             Absolutely. Pick a time below.
-//           </div>
-//         </div>
-//       );
-//     }
-
-//     return null;
-//   };
-
-//   return (
-//     <div className="h-screen w-full bg-[#F0F4F8] font-sans overflow-hidden relative flex flex-col">
-//       {/* --- BACKGROUND AMBIENT --- */}
-//       <div className="absolute inset-0 pointer-events-none">
-//         <div className="absolute top-[-10%] left-[-10%] w-[50vw] h-[50vw] bg-[#A0E1E1] rounded-full mix-blend-multiply filter blur-[100px] opacity-60 animate-blob"></div>
-//         <div className="absolute bottom-[-10%] right-[-10%] w-[50vw] h-[50vw] bg-[#D4C4FB] rounded-full mix-blend-multiply filter blur-[100px] opacity-60 animate-blob animation-delay-2000"></div>
-//         <div className="absolute top-[20%] left-[30%] w-[40vw] h-[40vw] bg-[#AFF8D8] rounded-full mix-blend-multiply filter blur-[100px] opacity-50 animate-blob animation-delay-4000"></div>
-//       </div>
-
-//       {/* --- HEADER --- */}
-//       <nav className="absolute top-0 left-0 w-full z-50 p-6 flex justify-between items-center">
-//         <div className="flex items-center gap-2 px-4 py-2 bg-white/20 backdrop-blur-md rounded-full border border-white/30">
-//           <img
-//             src="/assets/logo.jpeg"
-//             alt="logo"
-//             className="w-6 h-6 rounded object-cover"
-//           />
-
-//           <span className="text-gray-800 font-bold tracking-tight">
-//             Afterlife
-//           </span>
-//         </div>
-//         <div className="hidden md:flex gap-8 text-sm font-medium text-gray-600 bg-white/20 backdrop-blur-md px-6 py-2 rounded-full border border-white/30">
-//           {NAV_ITEMS.map((item) => (
-//             <button
-//               key={item}
-//               className="group relative h-[1.2em] overflow-hidden"
-//             >
-//               <div className="flex flex-col transition-transform duration-300 ease-[cubic-bezier(0.25,1,0.5,1)] group-hover:-translate-y-[1.2em]">
-//                 <span className="flex items-center h-[1.2em]">{item}</span>
-//                 <span className="flex items-center h-[1.2em] text-black font-bold">
-//                   {item}
-//                 </span>
-//               </div>
-//             </button>
-//           ))}
-//         </div>
-//       </nav>
-
-//       {/* --- MAIN STAGE --- */}
-//       <main className="flex-1 flex flex-col md:flex-row relative z-10 h-full p-4 md:p-6 gap-4 md:gap-6 pt-24 md:pt-24">
-//         {products.map((product) => {
-//           const isActive = activeId === product.id;
-
-//           return (
-//             <div
-//               key={product.id}
-//               onMouseEnter={() => !isAnyAgentOpen && setActiveId(product.id)}
-//               className={`
-//                 relative h-full transition-all duration-700 ease-[cubic-bezier(0.25,1,0.5,1)] rounded-[2rem] overflow-hidden cursor-pointer border border-white/40 shadow-2xl
-//                 ${isActive ? "flex-[3] md:flex-[2.5]" : "flex-1"}
-//                 group
-//               `}
-//             >
-//               {/* IMAGE LAYER */}
-//               <div className="absolute inset-0 overflow-hidden">
-//                 <img
-//                   src={product.backgroundImage}
-//                   alt=""
-//                   className={`w-full h-full object-cover transition-all duration-700 ${isActive ? "opacity-20 scale-105" : "opacity-40 grayscale-[20%] scale-100"}`}
-//                 />
-//                 <div
-//                   className={`absolute inset-0 bg-gradient-to-b from-white/80 via-white/40 to-white/10 ${isActive ? "backdrop-blur-xl" : "backdrop-blur-sm"}`}
-//                 ></div>
-//               </div>
-
-//               {/* GLOW LAYER */}
-//               <div
-//                 className={`absolute inset-0 transition-opacity duration-700 ${isActive ? "opacity-100" : "opacity-0"} bg-gradient-to-b ${product.bgGlow} to-transparent mix-blend-overlay`}
-//               ></div>
-
-//               {/* CONTENT CONTAINER */}
-//               {/* FIX: Changed justify-center to justify-end and added pb-12 to prevent top clipping */}
-//               <div className="relative h-full flex flex-col justify-end p-8 md:p-12 z-10 pb-20">
-//                 {/* POPULAR BADGE */}
-
-//                 {product.isPopular && (
 //                   <div
 //                     className={`absolute top-12 right-12 z-20 px-3 py-1 bg-black/5 backdrop-blur-md border border-black/5 rounded-full flex items-center gap-1.5 transition-opacity duration-500 ${isActive ? "opacity-100" : "opacity-0"}`}
 //                   >
