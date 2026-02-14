@@ -40,7 +40,6 @@ const LiveKitWidget = dynamic(() => import("./components/LiveKitWidget"), {
   ssr: false,
 });
 
-
 export default function Home() {
   const [activeId, setActiveId] = useState<string | null>("voice");
   const [showAvatarWidget, setShowAvatarWidget] = useState(false);
@@ -64,11 +63,17 @@ export default function Home() {
     type: "success" | "error" | null;
     message: string;
   }>({ type: null, message: "" });
-  
+
   // Mobile state
   const [isMobile, setIsMobile] = useState(false);
   const [expandedCard, setExpandedCard] = useState<string | null>("voice");
   const [mounted, setMounted] = useState(false);
+
+  // Preview closing animation state
+  const [isPreviewClosing, setIsPreviewClosing] = useState(false);
+
+  // Animation trigger for avatar "hi" gesture on each hover
+  const [animationTrigger, setAnimationTrigger] = useState(0);
 
   // Check if mobile on mount and resize
   useEffect(() => {
@@ -77,8 +82,8 @@ export default function Home() {
       setIsMobile(window.innerWidth < 768);
     };
     checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
+    window.addEventListener("resize", checkMobile);
+    return () => window.removeEventListener("resize", checkMobile);
   }, []);
 
   // Prevent hydration mismatch
@@ -88,11 +93,20 @@ export default function Home() {
 
   const handleWhatsappDemo = async () => {
     const cleanedNumber = whatsappNumber.replace(/\D/g, "");
-    
-    const MIN_LENGTH = selectedCountry.code === "US" || selectedCountry.code === "CA" || selectedCountry.code === "IN" ? 10 : 8;
+
+    const MIN_LENGTH =
+      selectedCountry.code === "US" ||
+      selectedCountry.code === "CA" ||
+      selectedCountry.code === "IN"
+        ? 10
+        : 8;
     const MAX_LENGTH = 15;
 
-    if (!whatsappNumber.trim() || cleanedNumber.length < MIN_LENGTH || cleanedNumber.length > MAX_LENGTH) {
+    if (
+      !whatsappNumber.trim() ||
+      cleanedNumber.length < MIN_LENGTH ||
+      cleanedNumber.length > MAX_LENGTH
+    ) {
       setWhatsappStatus({
         type: "error",
         message: `Please enter a valid ${selectedCountry.name} number (${MIN_LENGTH}-${MAX_LENGTH} digits)`,
@@ -318,14 +332,33 @@ export default function Home() {
     },
   ];
 
-  const renderMockup = (productId: string, isActive: boolean, isMobileView: boolean = false) => {
+  const renderMockup = (
+    productId: string,
+    isActive: boolean,
+    isMobileView: boolean = false,
+  ) => {
     if (productId === "web") {
+      // Hide preview entirely (including border box) when widget is open
+      // Only show on hover when widget is not open
+      const shouldShowPreview = isActive && !showAvatarWidget;
+
+      if (!shouldShowPreview && !isPreviewClosing) {
+        return null; // Hide entire mockup including border box
+      }
+
       return (
-        <div className={`${isMobileView ? 'w-full h-32' : 'w-full max-w-xs h-48'} bg-white/40 rounded-xl border border-white/50 shadow-sm backdrop-blur-md overflow-hidden flex items-center justify-center`}>
-          {mounted && isActive && (
+        <div
+          className={`${isMobileView ? "w-full h-32" : "w-full max-w-xs h-48"} bg-white/40 rounded-xl border border-white/50 shadow-sm backdrop-blur-md overflow-hidden flex items-center justify-center transition-all duration-500 ease-out ${
+            isPreviewClosing ? "opacity-0 scale-90" : "opacity-100 scale-100"
+          }`}
+        >
+          {mounted && (shouldShowPreview || isPreviewClosing) && (
             <Avatar3DSingleton
+              key={animationTrigger} // Key changes on each hover to replay animation
               scale={isMobileView ? 0.8 : 1.2}
               position={[0, -1.15, 0]}
+              playAnimation={true}
+              animationSpeed={0.7} // Slower, more graceful animation (70% of normal speed)
             />
           )}
         </div>
@@ -334,13 +367,23 @@ export default function Home() {
 
     if (productId === "voice") {
       return (
-        <div className={`${isMobileView ? 'w-full' : 'w-full max-w-xs'} flex items-center justify-center gap-4`}>
-          <div className={`${isMobileView ? 'w-10 h-10' : 'w-12 h-12'} rounded-full bg-white/60 flex items-center justify-center shadow-lg animate-pulse`}>
-            <div className={`${isMobileView ? 'w-2 h-2' : 'w-3 h-3'} bg-purple-600 rounded-full`}></div>
+        <div
+          className={`${isMobileView ? "w-full" : "w-full max-w-xs"} flex items-center justify-center gap-4`}
+        >
+          <div
+            className={`${isMobileView ? "w-10 h-10" : "w-12 h-12"} rounded-full bg-white/60 flex items-center justify-center shadow-lg animate-pulse`}
+          >
+            <div
+              className={`${isMobileView ? "w-2 h-2" : "w-3 h-3"} bg-purple-600 rounded-full`}
+            ></div>
           </div>
           <div className="flex flex-col gap-1">
-            <div className={`${isMobileView ? 'w-20' : 'w-24'} h-2 bg-gray-800/10 rounded-full`}></div>
-            <div className={`${isMobileView ? 'w-12' : 'w-16'} h-2 bg-gray-800/10 rounded-full`}></div>
+            <div
+              className={`${isMobileView ? "w-20" : "w-24"} h-2 bg-gray-800/10 rounded-full`}
+            ></div>
+            <div
+              className={`${isMobileView ? "w-12" : "w-16"} h-2 bg-gray-800/10 rounded-full`}
+            ></div>
           </div>
         </div>
       );
@@ -348,7 +391,9 @@ export default function Home() {
 
     if (productId === "whatsapp") {
       return (
-        <div className={`${isMobileView ? 'w-full' : 'w-full max-w-xs'} bg-[#E5DDD5]/80 rounded-xl p-2 border border-white/50 shadow-sm backdrop-blur-sm relative overflow-hidden`}>
+        <div
+          className={`${isMobileView ? "w-full" : "w-full max-w-xs"} bg-[#E5DDD5]/80 rounded-xl p-2 border border-white/50 shadow-sm backdrop-blur-sm relative overflow-hidden`}
+        >
           <div className="absolute inset-0 opacity-10 bg-black"></div>
           <div className="relative z-10 bg-white p-2 rounded-lg shadow-sm text-xs mb-2 w-3/4 ml-auto rounded-tr-none">
             Hey! Can I schedule a demo?
@@ -379,18 +424,18 @@ export default function Home() {
           <div className="px-4 pt-24 pb-8 space-y-4">
             {products.map((product) => {
               const isExpanded = expandedCard === product.id;
-              
+
               return (
                 <div
                   key={product.id}
                   onClick={() => !isExpanded && setExpandedCard(product.id)}
                   className={`
                     relative rounded-3xl overflow-hidden transition-all duration-500 ease-out
-                    ${isExpanded ? 'bg-white/90 backdrop-blur-xl shadow-2xl' : 'bg-white/40 backdrop-blur-md shadow-lg'}
+                    ${isExpanded ? "bg-white/90 backdrop-blur-xl shadow-2xl" : "bg-white/40 backdrop-blur-md shadow-lg"}
                     border border-white/50
                   `}
                   style={{
-                    minHeight: isExpanded ? 'auto' : '100px',
+                    minHeight: isExpanded ? "auto" : "100px",
                   }}
                 >
                   {/* Background Image */}
@@ -400,11 +445,13 @@ export default function Home() {
                       alt=""
                       className="w-full h-full object-cover opacity-30"
                     />
-                    <div className={`absolute inset-0 bg-gradient-to-br ${product.mobileGradient}`}></div>
+                    <div
+                      className={`absolute inset-0 bg-gradient-to-br ${product.mobileGradient}`}
+                    ></div>
                   </div>
 
                   {/* Card Header - Always Visible */}
-                  <div 
+                  <div
                     className="relative p-4 flex items-center justify-between cursor-pointer"
                     onClick={(e) => {
                       e.stopPropagation();
@@ -412,7 +459,9 @@ export default function Home() {
                     }}
                   >
                     <div className="flex items-center gap-3">
-                      <div className={`p-3 rounded-2xl bg-white/60 shadow-sm text-gray-800`}>
+                      <div
+                        className={`p-3 rounded-2xl bg-white/60 shadow-sm text-gray-800`}
+                      >
                         {product.icon}
                       </div>
                       <div>
@@ -424,24 +473,26 @@ export default function Home() {
                         </p>
                       </div>
                     </div>
-                    
+
                     <div className="flex items-center gap-2">
                       {product.isPopular && !isExpanded && (
                         <div className="px-2 py-1 bg-purple-500/20 rounded-full">
                           <Sparkles size={12} className="text-purple-600" />
                         </div>
                       )}
-                      <div className={`p-1.5 rounded-full bg-white/50 transition-transform duration-500 ${isExpanded ? 'rotate-180' : ''}`}>
+                      <div
+                        className={`p-1.5 rounded-full bg-white/50 transition-transform duration-500 ${isExpanded ? "rotate-180" : ""}`}
+                      >
                         <ChevronDown size={20} className="text-gray-700" />
                       </div>
                     </div>
                   </div>
 
                   {/* Expanded Content */}
-                  <div 
+                  <div
                     className={`
                       relative px-4 pb-4 transition-all duration-500 ease-out
-                      ${isExpanded ? 'opacity-100 max-h-[800px]' : 'opacity-0 max-h-0 overflow-hidden'}
+                      ${isExpanded ? "opacity-100 max-h-[800px]" : "opacity-0 max-h-0 overflow-hidden"}
                     `}
                   >
                     {/* Description */}
@@ -459,8 +510,12 @@ export default function Home() {
                       {product.id === "web" ? (
                         <button
                           onClick={() => {
-                            setShowAvatarWidget(true);
-                            setIsAnyAgentOpen(true);
+                            setIsPreviewClosing(true);
+                            setTimeout(() => {
+                              setShowAvatarWidget(true);
+                              setIsAnyAgentOpen(true);
+                              setIsPreviewClosing(false);
+                            }, 500); // Match transition duration
                           }}
                           className="w-full flex items-center justify-center gap-2 px-6 py-3.5 bg-gray-900 text-white rounded-xl font-bold shadow-lg hover:bg-gray-800 transition-colors"
                         >
@@ -481,7 +536,14 @@ export default function Home() {
                                 }}
                               >
                                 <span className="text-[10px] uppercase text-gray-500 font-bold tracking-wider flex items-center gap-1">
-                                  {copySuccess ? <Check size={12} className="text-green-600" /> : <Copy size={12} />}
+                                  {copySuccess ? (
+                                    <Check
+                                      size={12}
+                                      className="text-green-600"
+                                    />
+                                  ) : (
+                                    <Copy size={12} />
+                                  )}
                                   {copySuccess ? "Copied!" : "Message Us"}
                                 </span>
                                 <span className="text-xs font-mono font-bold text-gray-800">
@@ -523,7 +585,9 @@ export default function Home() {
                                 placeholder="Your Number"
                                 className="bg-transparent text-black outline-none px-2 py-2.5 flex-1 text-sm"
                                 value={whatsappNumber}
-                                onChange={(e) => setWhatsappNumber(e.target.value)}
+                                onChange={(e) =>
+                                  setWhatsappNumber(e.target.value)
+                                }
                                 disabled={isWhatsappLoading}
                               />
                             </div>
@@ -554,7 +618,11 @@ export default function Home() {
                               <CountryCodeSelect
                                 value={selectedCountry}
                                 onChange={setSelectedCountry}
-                                disabled={isCallLoading || callState === "connecting" || callState === "connected"}
+                                disabled={
+                                  isCallLoading ||
+                                  callState === "connecting" ||
+                                  callState === "connected"
+                                }
                               />
                               <input
                                 type="tel"
@@ -562,15 +630,26 @@ export default function Home() {
                                 className="bg-transparent border-none outline-none text-gray-900 px-2 py-2.5 flex-1 text-sm disabled:opacity-50"
                                 value={phoneNumber}
                                 onChange={(e) => {
-                                  const value = e.target.value.replace(/[^\d\s()-]/g, "");
+                                  const value = e.target.value.replace(
+                                    /[^\d\s()-]/g,
+                                    "",
+                                  );
                                   setPhoneNumber(value);
                                 }}
-                                disabled={isCallLoading || callState === "connecting" || callState === "connected"}
+                                disabled={
+                                  isCallLoading ||
+                                  callState === "connecting" ||
+                                  callState === "connected"
+                                }
                               />
                             </div>
                             <button
                               onClick={handleMakeCall}
-                              disabled={isCallLoading || callState === "connecting" || callState === "connected"}
+                              disabled={
+                                isCallLoading ||
+                                callState === "connecting" ||
+                                callState === "connected"
+                              }
                               className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-gradient-to-r from-purple-500 to-pink-600 text-white rounded-xl font-bold shadow-lg hover:from-purple-600 hover:to-pink-700 transition-colors disabled:opacity-50"
                             >
                               {callState === "connecting" ? (
@@ -599,12 +678,20 @@ export default function Home() {
 
                           {/* Status Messages */}
                           {callStatus.type && (
-                            <div className={`p-3 rounded-xl backdrop-blur-md border ${
-                              callStatus.type === "success" ? "bg-green-500/20 border-green-500/30" : "bg-red-500/20 border-red-500/30"
-                            }`}>
+                            <div
+                              className={`p-3 rounded-xl backdrop-blur-md border ${
+                                callStatus.type === "success"
+                                  ? "bg-green-500/20 border-green-500/30"
+                                  : "bg-red-500/20 border-red-500/30"
+                              }`}
+                            >
                               <div className="flex items-center gap-2">
-                                <div className={`w-2 h-2 rounded-full ${callStatus.type === "success" ? "bg-green-500" : "bg-red-500"} animate-pulse`} />
-                                <span className="text-xs font-medium text-gray-800">{callStatus.message}</span>
+                                <div
+                                  className={`w-2 h-2 rounded-full ${callStatus.type === "success" ? "bg-green-500" : "bg-red-500"} animate-pulse`}
+                                />
+                                <span className="text-xs font-medium text-gray-800">
+                                  {callStatus.message}
+                                </span>
                               </div>
                             </div>
                           )}
@@ -655,7 +742,15 @@ export default function Home() {
             return (
               <div
                 key={product.id}
-                onMouseEnter={() => !isAnyAgentOpen && setActiveId(product.id)}
+                onMouseEnter={() => {
+                  if (!isAnyAgentOpen) {
+                    setActiveId(product.id);
+                    // Trigger animation replay for web agent on each hover
+                    if (product.id === "web") {
+                      setAnimationTrigger((prev) => prev + 1);
+                    }
+                  }
+                }}
                 className={`
                   relative h-full transition-all duration-700 ease-[cubic-bezier(0.25,1,0.5,1)] rounded-[2rem] overflow-hidden cursor-pointer border border-white/40 shadow-2xl
                   ${isActive ? "flex-[3] md:flex-[2.5]" : "flex-1"}
@@ -754,8 +849,12 @@ export default function Home() {
                         {product.id === "web" ? (
                           <button
                             onClick={() => {
-                              setShowAvatarWidget(true);
-                              setIsAnyAgentOpen(true);
+                              setIsPreviewClosing(true);
+                              setTimeout(() => {
+                                setShowAvatarWidget(true);
+                                setIsAnyAgentOpen(true);
+                                setIsPreviewClosing(false);
+                              }, 500); // Match transition duration
                             }}
                             className="flex items-center gap-2 px-8 py-4 bg-gray-900 text-white rounded-full font-bold shadow-lg hover:bg-gray-800 transition-colors"
                           >
@@ -805,7 +904,7 @@ export default function Home() {
                               </span>
                               <div className="h-px bg-gray-300 flex-1"></div>
                             </div>
-                            
+
                             <div className="flex items-center gap-1 p-1.5 bg-white/60 border border-white/50 backdrop-blur-md rounded-full shadow-sm">
                               <CountryCodeSelect
                                 value={selectedCountry}
@@ -945,16 +1044,17 @@ export default function Home() {
                               </div>
                             )}
 
-                            {callState === "disconnected" && !callStatus.type && (
-                              <div className="px-4 py-2.5 rounded-xl backdrop-blur-md border bg-white/40 border-white/50 shadow-sm">
-                                <div className="flex items-center gap-2">
-                                  <div className="w-2 h-2 bg-orange-500 rounded-full shrink-0" />
-                                  <span className="text-xs font-medium text-gray-800">
-                                    Call Disconnected - Ready for next call
-                                  </span>
+                            {callState === "disconnected" &&
+                              !callStatus.type && (
+                                <div className="px-4 py-2.5 rounded-xl backdrop-blur-md border bg-white/40 border-white/50 shadow-sm">
+                                  <div className="flex items-center gap-2">
+                                    <div className="w-2 h-2 bg-orange-500 rounded-full shrink-0" />
+                                    <span className="text-xs font-medium text-gray-800">
+                                      Call Disconnected - Ready for next call
+                                    </span>
+                                  </div>
                                 </div>
-                              </div>
-                            )}
+                              )}
                           </div>
                         )}
                       </div>

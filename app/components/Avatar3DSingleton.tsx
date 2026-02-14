@@ -11,6 +11,7 @@ let globalScene: THREE.Scene | null = null;
 let globalCamera: THREE.PerspectiveCamera | null = null;
 let globalModel: THREE.Group | null = null;
 let globalMixer: THREE.AnimationMixer | null = null;
+let globalAnimationAction: THREE.AnimationAction | null = null;
 let isLoading = false;
 let isLoaded = false;
 let animationFrameId: number | null = null;
@@ -18,11 +19,15 @@ let animationFrameId: number | null = null;
 interface Avatar3DSingletonProps {
   scale?: number;
   position?: [number, number, number];
+  playAnimation?: boolean;
+  animationSpeed?: number; // Control animation playback speed (1.0 = normal, 0.5 = half speed)
 }
 
 export default function Avatar3DSingleton({
   scale = 1.2,
   position = [0, -1.15, 0],
+  playAnimation = true,
+  animationSpeed = 1.0,
 }: Avatar3DSingletonProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const mountedRef = useRef(true);
@@ -35,6 +40,15 @@ export default function Avatar3DSingleton({
       mountedRef.current = false;
     };
   }, []);
+
+  // Effect to replay animation when playAnimation changes
+  useEffect(() => {
+    if (playAnimation && globalAnimationAction && globalMixer) {
+      globalAnimationAction.reset();
+      globalAnimationAction.timeScale = animationSpeed; // Set animation speed
+      globalAnimationAction.play();
+    }
+  }, [playAnimation, animationSpeed]);
 
   useEffect(() => {
     if (!containerRef.current) return;
@@ -85,7 +99,12 @@ export default function Avatar3DSingleton({
 
         // Create camera only once
         if (!globalCamera) {
-          globalCamera = new THREE.PerspectiveCamera(45, width / height, 0.1, 1000);
+          globalCamera = new THREE.PerspectiveCamera(
+            45,
+            width / height,
+            0.1,
+            1000,
+          );
           globalCamera.position.set(0, 0, 3.5);
         } else {
           globalCamera.aspect = width / height;
@@ -96,14 +115,9 @@ export default function Avatar3DSingleton({
         if (!globalModel && !isLoading) {
           isLoading = true;
           const loader = new GLTFLoader();
-          
+
           const gltf = await new Promise<any>((resolve, reject) => {
-            loader.load(
-              "/avatar&animations.glb",
-              resolve,
-              undefined,
-              reject
-            );
+            loader.load("/avatar&animations.glb", resolve, undefined, reject);
           });
 
           if (!mountedRef.current) return;
@@ -117,10 +131,13 @@ export default function Avatar3DSingleton({
             // Setup animation
             if (gltf.animations && gltf.animations.length > 0) {
               globalMixer = new THREE.AnimationMixer(globalModel);
-              const action = globalMixer.clipAction(gltf.animations[0]);
-              action.setLoop(THREE.LoopOnce, 1);
-              action.clampWhenFinished = true;
-              action.play();
+              globalAnimationAction = globalMixer.clipAction(
+                gltf.animations[0],
+              );
+              globalAnimationAction.setLoop(THREE.LoopOnce, 1);
+              globalAnimationAction.clampWhenFinished = true;
+              globalAnimationAction.timeScale = animationSpeed; // Set initial animation speed
+              globalAnimationAction.play();
             }
           }
 
@@ -135,7 +152,7 @@ export default function Avatar3DSingleton({
         const clock = new THREE.Clock();
         const animate = () => {
           if (!mountedRef.current) return;
-          
+
           animationFrameId = requestAnimationFrame(animate);
 
           if (globalMixer) {
@@ -152,10 +169,10 @@ export default function Avatar3DSingleton({
         // Handle resize
         const handleResize = () => {
           if (!container || !globalRenderer || !globalCamera) return;
-          
+
           const width = container.clientWidth;
           const height = container.clientHeight;
-          
+
           globalRenderer.setSize(width, height);
           globalCamera.aspect = width / height;
           globalCamera.updateProjectionMatrix();
@@ -165,7 +182,7 @@ export default function Avatar3DSingleton({
 
         return () => {
           window.removeEventListener("resize", handleResize);
-          
+
           if (animationFrameId !== null) {
             cancelAnimationFrame(animationFrameId);
             animationFrameId = null;
@@ -199,7 +216,7 @@ export default function Avatar3DSingleton({
           <p className="text-sm text-red-600">{error}</p>
         </div>
       )}
-      
+
       {loading && !error && (
         <div className="w-full h-full flex items-center justify-center">
           <div className="flex flex-col items-center gap-3">
@@ -209,7 +226,9 @@ export default function Avatar3DSingleton({
                 <div className="h-3 w-3 bg-blue-500 rounded-full animate-pulse"></div>
               </div>
             </div>
-            <p className="text-sm text-gray-600 font-medium">Loading avatar...</p>
+            <p className="text-sm text-gray-600 font-medium">
+              Loading avatar...
+            </p>
           </div>
         </div>
       )}
