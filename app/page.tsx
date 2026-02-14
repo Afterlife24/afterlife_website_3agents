@@ -86,6 +86,44 @@ export default function Home() {
     return () => window.removeEventListener("resize", checkMobile);
   }, []);
 
+  // Handle URL parameters for navigation (agent-triggered actions)
+  useEffect(() => {
+    if (!mounted) return;
+
+    const params = new URLSearchParams(window.location.search);
+    const action = params.get("action");
+    const section = params.get("section");
+
+    if (action && section) {
+      // Small delay to ensure page is fully loaded
+      setTimeout(() => {
+        if (action === "expand") {
+          // Expand specific product card (mobile and desktop)
+          if (
+            section === "voice" ||
+            section === "web" ||
+            section === "whatsapp"
+          ) {
+            setExpandedCard(section);
+            setActiveId(section);
+
+            // Scroll to the card smoothly
+            const element = document.getElementById(`product-${section}`);
+            if (element) {
+              element.scrollIntoView({ behavior: "smooth", block: "center" });
+            }
+          }
+        } else if (action === "scroll") {
+          // Scroll to specific section
+          const element = document.getElementById(section);
+          if (element) {
+            element.scrollIntoView({ behavior: "smooth", block: "start" });
+          }
+        }
+      }, 500);
+    }
+  }, [mounted]);
+
   // Prevent hydration mismatch
   if (!mounted) {
     return null;
@@ -428,6 +466,7 @@ export default function Home() {
               return (
                 <div
                   key={product.id}
+                  id={`product-${product.id}`}
                   onClick={() => !isExpanded && setExpandedCard(product.id)}
                   className={`
                     relative rounded-3xl overflow-hidden transition-all duration-500 ease-out
@@ -742,6 +781,7 @@ export default function Home() {
             return (
               <div
                 key={product.id}
+                id={`product-${product.id}`}
                 onMouseEnter={() => {
                   if (!isAnyAgentOpen) {
                     setActiveId(product.id);
