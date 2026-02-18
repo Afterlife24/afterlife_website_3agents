@@ -45,20 +45,20 @@ export default function AvatarWidget({ isOpen, onClose }: AvatarWidgetProps) {
       role="dialog"
       aria-label="3D Avatar Preview"
       aria-modal="true"
-      className="fixed bottom-20 right-4 md:bottom-24 md:right-6 w-64 h-80 md:w-72 md:h-96 z-50 flex flex-col"
+      className="fixed bottom-4 right-4 w-64 h-72 md:w-72 md:h-80 z-50 flex flex-col"
     >
       {/* Avatar3D instance with controls enabled */}
       <div className="flex-1">
         <Avatar3D
-          scale={1.6}
-          position={[0, -1.2, 0]}
+          scale={1.0}
+          position={[0, -1.15, 0]}
           enableOrbitControls={true}
           autoRotate={false}
         />
       </div>
 
       {/* Close button */}
-      <div className="p-3 flex justify-center">
+      <div className="p-3 flex justify-start">
         <button
           onClick={onClose}
           aria-label="Close avatar preview"

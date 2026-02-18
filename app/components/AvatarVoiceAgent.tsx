@@ -97,7 +97,7 @@ export default function AvatarVoiceAgent({ onClose }: AvatarVoiceAgentProps) {
 
   return (
     <div
-      className="fixed bottom-24 right-6 w-72 h-80 md:w-80 md:h-[22rem] z-50 flex flex-col"
+      className="fixed bottom-4 right-4 w-48 h-56 md:w-72 md:h-80 z-50 flex flex-col"
       role="dialog"
       aria-label="Voice Agent Widget"
       aria-modal="true"
@@ -105,34 +105,38 @@ export default function AvatarVoiceAgent({ onClose }: AvatarVoiceAgentProps) {
       {/* Avatar container - flex-1 takes remaining space */}
       <div className="flex-1">
         <Avatar3D
-          scale={1.20}
-          position={[0, -1.3, 0]}
+          scale={1.0}
+          position={[0, -1.15, 0]}
           enableOrbitControls={false}
         />
       </div>
 
       {/* Control bar - fixed height */}
-      <div className="flex items-center justify-between p-3">
+      <div className="flex items-center justify-between p-2 md:p-3">
+        {/* Close button - moved to left */}
+        <button
+          onClick={handleClose}
+          className="p-2 md:p-2.5 rounded-full bg-white/90 backdrop-blur-md border border-white/20 shadow-lg transition-all duration-300 hover:scale-105 hover:bg-white text-gray-600 hover:text-gray-800"
+          aria-label="Close voice agent"
+          title="Close voice agent"
+        >
+          <X size={16} className="md:w-[18px] md:h-[18px]" />
+        </button>
+
         {/* Microphone toggle button */}
         <button
           onClick={toggleListening}
-          className="p-2.5 rounded-full bg-white/90 backdrop-blur-md border border-white/20 shadow-lg transition-all duration-300 hover:scale-105 hover:bg-white"
+          className="p-2 md:p-2.5 rounded-full bg-white/90 backdrop-blur-md border border-white/20 shadow-lg transition-all duration-300 hover:scale-105 hover:bg-white"
           style={{ color: isListening ? "#D4AF37" : "#6b7280" }}
           aria-label={isListening ? "Disable microphone" : "Enable microphone"}
           aria-pressed={isListening}
           title={isListening ? "Disable microphone" : "Enable microphone"}
         >
-          {isListening ? <Mic size={18} /> : <MicOff size={18} />}
-        </button>
-
-        {/* Close button */}
-        <button
-          onClick={handleClose}
-          className="p-2.5 rounded-full bg-white/90 backdrop-blur-md border border-white/20 shadow-lg transition-all duration-300 hover:scale-105 hover:bg-white text-gray-600 hover:text-gray-800"
-          aria-label="Close voice agent"
-          title="Close voice agent"
-        >
-          <X size={18} />
+          {isListening ? (
+            <Mic size={16} className="md:w-[18px] md:h-[18px]" />
+          ) : (
+            <MicOff size={16} className="md:w-[18px] md:h-[18px]" />
+          )}
         </button>
       </div>
     </div>

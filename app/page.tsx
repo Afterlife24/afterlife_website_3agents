@@ -86,6 +86,12 @@ export default function Home() {
     return () => window.removeEventListener("resize", checkMobile);
   }, []);
 
+  // Clear phone numbers when country changes
+  useEffect(() => {
+    setPhoneNumber("");
+    setWhatsappNumber("");
+  }, [selectedCountry]);
+
   // Handle URL parameters for navigation (agent-triggered actions)
   useEffect(() => {
     if (!mounted) return;
@@ -433,10 +439,10 @@ export default function Home() {
           className={`${isMobileView ? "w-full" : "w-full max-w-xs"} bg-[#E5DDD5]/80 rounded-xl p-2 border border-white/50 shadow-sm backdrop-blur-sm relative overflow-hidden`}
         >
           <div className="absolute inset-0 opacity-10 bg-black"></div>
-          <div className="relative z-10 bg-white p-2 rounded-lg shadow-sm text-xs mb-2 w-3/4 ml-auto rounded-tr-none">
+          <div className="relative z-10 bg-white p-2 rounded-lg shadow-sm text-xs mb-2 w-3/4 ml-auto rounded-tr-none text-gray-900 font-medium">
             Hey! Can I schedule a demo?
           </div>
-          <div className="relative z-10 bg-[#DCF8C6] p-2 rounded-lg shadow-sm text-xs w-3/4 mr-auto rounded-tl-none">
+          <div className="relative z-10 bg-[#DCF8C6] p-2 rounded-lg shadow-sm text-xs w-3/4 mr-auto rounded-tl-none text-gray-900 font-medium">
             Absolutely. Pick a time below.
           </div>
         </div>
@@ -459,7 +465,7 @@ export default function Home() {
         {/* Scrollable Content */}
         <div className="flex-1 overflow-y-auto z-10 relative scroll-smooth bg-transparent">
           {/* Product Cards Section */}
-          <div className="px-4 pt-24 pb-8 space-y-4">
+          <div className="px-4 pt-13 pb-8 space-y-4">
             {products.map((product) => {
               const isExpanded = expandedCard === product.id;
 
@@ -470,11 +476,11 @@ export default function Home() {
                   onClick={() => !isExpanded && setExpandedCard(product.id)}
                   className={`
                     relative rounded-3xl overflow-hidden transition-all duration-500 ease-out
-                    ${isExpanded ? "bg-white/90 backdrop-blur-xl shadow-2xl" : "bg-white/40 backdrop-blur-md shadow-lg"}
+                    ${isExpanded ? "bg-white/95 backdrop-blur-xl shadow-2xl scale-[1.02]" : "bg-white/50 backdrop-blur-md shadow-lg"}
                     border border-white/50
                   `}
                   style={{
-                    minHeight: isExpanded ? "auto" : "100px",
+                    minHeight: isExpanded ? "auto" : "110px",
                   }}
                 >
                   {/* Background Image */}
@@ -491,20 +497,24 @@ export default function Home() {
 
                   {/* Card Header - Always Visible */}
                   <div
-                    className="relative p-4 flex items-center justify-between cursor-pointer"
+                    className="relative p-5 flex items-center justify-between cursor-pointer"
                     onClick={(e) => {
                       e.stopPropagation();
                       setExpandedCard(isExpanded ? null : product.id);
+                      // Trigger animation for web agent on mobile click
+                      if (product.id === "web" && !isExpanded) {
+                        setAnimationTrigger((prev) => prev + 1);
+                      }
                     }}
                   >
                     <div className="flex items-center gap-3">
                       <div
-                        className={`p-3 rounded-2xl bg-white/60 shadow-sm text-gray-800`}
+                        className={`p-3 rounded-2xl bg-white/70 shadow-md text-gray-800 transition-all duration-300 ${isExpanded ? "scale-110" : "scale-100"}`}
                       >
                         {product.icon}
                       </div>
                       <div>
-                        <h3 className="font-bold text-gray-900">
+                        <h3 className="font-bold text-gray-900 text-lg">
                           {product.title}
                         </h3>
                         <p className="text-xs text-gray-600 mt-0.5">
@@ -515,14 +525,14 @@ export default function Home() {
 
                     <div className="flex items-center gap-2">
                       {product.isPopular && !isExpanded && (
-                        <div className="px-2 py-1 bg-purple-500/20 rounded-full">
-                          <Sparkles size={12} className="text-purple-600" />
+                        <div className="px-2.5 py-1.5 bg-purple-500/20 rounded-full">
+                          <Sparkles size={14} className="text-purple-600" />
                         </div>
                       )}
                       <div
-                        className={`p-1.5 rounded-full bg-white/50 transition-transform duration-500 ${isExpanded ? "rotate-180" : ""}`}
+                        className={`p-2 rounded-full bg-white/60 transition-transform duration-500 ${isExpanded ? "rotate-180" : ""}`}
                       >
-                        <ChevronDown size={20} className="text-gray-700" />
+                        <ChevronDown size={22} className="text-gray-700" />
                       </div>
                     </div>
                   </div>
@@ -556,7 +566,7 @@ export default function Home() {
                               setIsPreviewClosing(false);
                             }, 500); // Match transition duration
                           }}
-                          className="w-full flex items-center justify-center gap-2 px-6 py-3.5 bg-gray-900 text-white rounded-xl font-bold shadow-lg hover:bg-gray-800 transition-colors"
+                          className="w-full flex items-center justify-center gap-2 px-6 py-3.5 bg-gradient-to-r from-blue-500 to-cyan-600 text-white rounded-xl font-bold shadow-lg hover:from-blue-600 hover:to-cyan-700 transition-all"
                         >
                           <span>Try Web Agent</span>
                           <ArrowRight size={16} />
@@ -624,16 +634,25 @@ export default function Home() {
                                 placeholder="Your Number"
                                 className="bg-transparent text-black outline-none px-2 py-2.5 flex-1 text-sm"
                                 value={whatsappNumber}
-                                onChange={(e) =>
-                                  setWhatsappNumber(e.target.value)
-                                }
+                                onChange={(e) => {
+                                  const value = e.target.value.replace(
+                                    /\D/g,
+                                    "",
+                                  ); // Only digits
+                                  if (
+                                    value.length <= selectedCountry.maxLength
+                                  ) {
+                                    setWhatsappNumber(value);
+                                  }
+                                }}
+                                maxLength={selectedCountry.maxLength}
                                 disabled={isWhatsappLoading}
                               />
                             </div>
                             <button
                               onClick={handleWhatsappDemo}
                               disabled={isWhatsappLoading}
-                              className="w-full flex items-center justify-center gap-2 px-6 py-3 bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-xl font-bold shadow-lg hover:from-green-600 hover:to-emerald-700 transition-all disabled:opacity-50"
+                              className="w-full flex items-center justify-center gap-2 px-6 py-3.5 bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-xl font-bold shadow-lg hover:from-green-600 hover:to-emerald-700 transition-all disabled:opacity-50"
                             >
                               {isWhatsappLoading ? (
                                 <>
@@ -670,11 +689,16 @@ export default function Home() {
                                 value={phoneNumber}
                                 onChange={(e) => {
                                   const value = e.target.value.replace(
-                                    /[^\d\s()-]/g,
+                                    /\D/g,
                                     "",
-                                  );
-                                  setPhoneNumber(value);
+                                  ); // Only digits
+                                  if (
+                                    value.length <= selectedCountry.maxLength
+                                  ) {
+                                    setPhoneNumber(value);
+                                  }
                                 }}
+                                maxLength={selectedCountry.maxLength}
                                 disabled={
                                   isCallLoading ||
                                   callState === "connecting" ||
@@ -689,7 +713,7 @@ export default function Home() {
                                 callState === "connecting" ||
                                 callState === "connected"
                               }
-                              className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-gradient-to-r from-purple-500 to-pink-600 text-white rounded-xl font-bold shadow-lg hover:from-purple-600 hover:to-pink-700 transition-colors disabled:opacity-50"
+                              className="w-full flex items-center justify-center gap-2 px-6 py-3.5 bg-gradient-to-r from-purple-500 to-pink-600 text-white rounded-xl font-bold shadow-lg hover:from-purple-600 hover:to-pink-700 transition-all disabled:opacity-50"
                             >
                               {callState === "connecting" ? (
                                 <>
@@ -896,7 +920,7 @@ export default function Home() {
                                 setIsPreviewClosing(false);
                               }, 500); // Match transition duration
                             }}
-                            className="flex items-center gap-2 px-8 py-4 bg-gray-900 text-white rounded-full font-bold shadow-lg hover:bg-gray-800 transition-colors"
+                            className="flex items-center gap-2 px-8 py-4 bg-gradient-to-r from-blue-500 to-cyan-600 text-white rounded-full font-bold shadow-lg hover:from-blue-600 hover:to-cyan-700 transition-all"
                           >
                             <span>Try Agent</span>
                             <ArrowRight size={18} />
@@ -955,9 +979,18 @@ export default function Home() {
                                 placeholder="Your Number"
                                 className="bg-transparent text-black outline-none px-3 py-2 flex-1 text-sm font-medium w-0 min-w-0"
                                 value={whatsappNumber}
-                                onChange={(e) =>
-                                  setWhatsappNumber(e.target.value)
-                                }
+                                onChange={(e) => {
+                                  const value = e.target.value.replace(
+                                    /\D/g,
+                                    "",
+                                  ); // Only digits
+                                  if (
+                                    value.length <= selectedCountry.maxLength
+                                  ) {
+                                    setWhatsappNumber(value);
+                                  }
+                                }}
+                                maxLength={selectedCountry.maxLength}
                                 onKeyDown={(e) => {
                                   if (e.key === "Enter" && !isWhatsappLoading) {
                                     handleWhatsappDemo();
@@ -968,7 +1001,7 @@ export default function Home() {
                               <button
                                 onClick={handleWhatsappDemo}
                                 disabled={isWhatsappLoading}
-                                className="flex items-center gap-2 px-6 py-2 bg-gray-900 text-white rounded-full font-bold hover:bg-gray-800 transition-all disabled:opacity-50 whitespace-nowrap shrink-0"
+                                className="flex items-center gap-2 px-6 py-2 bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-full font-bold hover:from-green-600 hover:to-emerald-700 transition-all disabled:opacity-50 whitespace-nowrap shrink-0"
                               >
                                 {isWhatsappLoading ? "Sending..." : "Get Demo"}
                                 <ArrowRight size={16} />
@@ -1015,11 +1048,16 @@ export default function Home() {
                                 value={phoneNumber}
                                 onChange={(e) => {
                                   const value = e.target.value.replace(
-                                    /[^\d\s()-]/g,
+                                    /\D/g,
                                     "",
-                                  );
-                                  setPhoneNumber(value);
+                                  ); // Only digits
+                                  if (
+                                    value.length <= selectedCountry.maxLength
+                                  ) {
+                                    setPhoneNumber(value);
+                                  }
                                 }}
+                                maxLength={selectedCountry.maxLength}
                                 onKeyDown={(e) => {
                                   if (e.key === "Enter" && !isCallLoading) {
                                     handleMakeCall();
@@ -1039,7 +1077,7 @@ export default function Home() {
                                   callState === "connecting" ||
                                   callState === "connected"
                                 }
-                                className="flex items-center gap-2 px-4 py-2.5 bg-gray-900 text-white rounded-full font-bold shadow-md hover:bg-gray-800 transition-colors text-sm disabled:opacity-50 disabled:cursor-not-allowed shrink-0 whitespace-nowrap"
+                                className="flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-purple-500 to-pink-600 text-white rounded-full font-bold shadow-md hover:from-purple-600 hover:to-pink-700 transition-all text-sm disabled:opacity-50 disabled:cursor-not-allowed shrink-0 whitespace-nowrap"
                               >
                                 {callState === "connecting" ? (
                                   <>
