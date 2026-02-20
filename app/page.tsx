@@ -35,12 +35,14 @@ import VisionSection from "../components/VisionSection";
 import ServicesSection from "../components/ServicesSection";
 import TestimonialsSection from "../components/TestimonialsSection";
 import Footer from "../components/Footer";
+import { useLanguage } from "./contexts/LanguageContext";
 
 const LiveKitWidget = dynamic(() => import("./components/LiveKitWidget"), {
   ssr: false,
 });
 
 export default function Home() {
+  const { t } = useLanguage();
   const [activeId, setActiveId] = useState<string | null>("voice");
   const [showAvatarWidget, setShowAvatarWidget] = useState(false);
   const [isAnyAgentOpen, setIsAnyAgentOpen] = useState(false);
@@ -336,11 +338,10 @@ export default function Home() {
   const products = [
     {
       id: "whatsapp",
-      title: "WhatsApp Agent",
-      subtitle: "Automated Messaging",
-      description:
-        "Scale your outreach on the worlds most popular app. Perfect for sales qualification and instant support.",
-      shortHighlight: "Automate sales and support on WhatsApp instantly.",
+      title: t("agent.whatsapp.title"),
+      subtitle: t("agent.whatsapp.subtitle"),
+      description: t("agent.whatsapp.desc"),
+      shortHighlight: t("agent.whatsapp.shortHighlight"),
       backgroundImage: "/assets/whatsapp-agent-bg.png",
       icon: <MessageCircle className="w-8 h-8" />,
       color: "from-green-400 to-emerald-300",
@@ -349,12 +350,11 @@ export default function Home() {
     },
     {
       id: "voice",
-      title: "Calling Agent",
+      title: t("agent.voice.title"),
       isPopular: true,
-      subtitle: "Human-like Voice AI",
-      description:
-        "Zero-latency voice processing that handles interruptions, accents, and complex logic flows naturally.",
-      shortHighlight: "Zero-latency voice interactions. Handles interruptions.",
+      subtitle: t("agent.voice.subtitle"),
+      description: t("agent.voice.desc"),
+      shortHighlight: t("agent.voice.shortHighlight"),
       backgroundImage: "/assets/voice-agent-bg.png",
       icon: <Mic className="w-8 h-8" />,
       color: "from-purple-400 to-pink-300",
@@ -363,11 +363,10 @@ export default function Home() {
     },
     {
       id: "web",
-      title: "Web Agent",
-      subtitle: "Context-aware Site Assistance",
-      description:
-        "Embeds directly into your DOM to understand user journey and provide instant, context-aware support.",
-      shortHighlight: "Seamlessly integrates with your website. Context-aware.",
+      title: t("agent.web.title"),
+      subtitle: t("agent.web.subtitle"),
+      description: t("agent.web.desc"),
+      shortHighlight: t("agent.web.shortHighlight"),
       backgroundImage: "/assets/web-agent-bg.png",
       icon: <Monitor className="w-8 h-8" />,
       color: "from-blue-400 to-cyan-300",

@@ -78,14 +78,14 @@ export default function LiveKitWidget({ onClose }: LiveKitWidgetProps) {
 
   /**
    * Connection options for LiveKit room
-   * - audio: Enable audio tracks
+   * - audio: Disable audio tracks by default (user must manually enable)
    * - video: Disable video tracks (audio-only connection)
    * - dynacast: Optimizes bandwidth by only sending active streams
    * - adaptiveStream: Adjusts quality based on network conditions
    * - stopLocalTrackOnUnpublish: Properly releases microphone when unpublishing
    */
   const connectOptions = {
-    audio: true,
+    audio: false,
     video: false,
     audioCaptureDefaults,
     dynacast: true,

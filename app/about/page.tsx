@@ -3,8 +3,11 @@
 import React from "react";
 import AmbientBackground from "../../components/AmbientBackground";
 import NavBar from "../../components/NavBar";
+import { useLanguage } from "../contexts/LanguageContext";
 
 export default function About() {
+  const { t } = useLanguage();
+
   return (
     <div className="h-screen w-full bg-[#F0F4F8] font-sans overflow-hidden relative flex flex-col">
       <AmbientBackground />
@@ -15,38 +18,53 @@ export default function About() {
           <div className="bg-white/40 backdrop-blur-xl rounded-[2.5rem] p-8 md:p-16 border border-white/50 shadow-2xl text-center relative overflow-hidden">
             {/* Decorative gradient overlay */}
             <div className="absolute inset-0 bg-gradient-to-b from-white/40 to-transparent pointer-events-none"></div>
-            
+
             <h1 className="relative text-4xl md:text-6xl font-bold text-gray-900 mb-8 tracking-tight">
-              About <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-purple-600">Afterlife</span>
+              {t("about.title")}{" "}
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-purple-600">
+                Afterlife
+              </span>
             </h1>
-            
+
             <div className="space-y-6 text-center max-w-3xl mx-auto relative z-10">
               <p className="text-xl md:text-2xl text-gray-800 font-semibold leading-relaxed">
-                We build intelligent AI employees that work 24/7.
+                {t("about.subtitle")}
               </p>
-              
+
               <div className="w-16 h-1 bg-gradient-to-r from-blue-500 to-purple-500 mx-auto rounded-full opacity-80"></div>
 
               <p className="text-base md:text-lg text-gray-700 leading-relaxed">
-                At <span className="font-bold text-gray-900">Afterlife</span>, we don&apos;t just make chatbots; we create advanced conversation systems that understand your business and your customers.
+                {t("about.text1")}
               </p>
 
               <p className="text-base md:text-lg text-gray-700 leading-relaxed">
-                Imagine having a top-tier support team that never sleeps, never misses a lead, and handles thousands of interactions instantly. Whether it&apos;s booking appointments on <span className="font-semibold text-green-600">WhatsApp</span>, handling complex queries over <span className="font-semibold text-purple-600">Voice calls</span>, or guiding users on your <span className="font-semibold text-blue-600">Website</span>—our agents do it all with a human touch.
+                {t("about.text2")}
               </p>
 
               <div className="pt-4 grid grid-cols-1 md:grid-cols-3 gap-4 text-left">
                 <div className="p-4 bg-white/50 rounded-2xl border border-white/50 shadow-sm">
-                  <h3 className="font-bold text-gray-900 mb-1">Automate</h3>
-                  <p className="text-sm text-gray-600">Handle support tickets and FAQ instantly without human intervention.</p>
+                  <h3 className="font-bold text-gray-900 mb-1">
+                    {t("about.automate.title")}
+                  </h3>
+                  <p className="text-sm text-gray-600">
+                    {t("about.automate.desc")}
+                  </p>
                 </div>
                 <div className="p-4 bg-white/50 rounded-2xl border border-white/50 shadow-sm">
-                  <h3 className="font-bold text-gray-900 mb-1">Engage</h3>
-                  <p className="text-sm text-gray-600">Turn passive visitors into active leads with proactive conversations.</p>
+                  <h3 className="font-bold text-gray-900 mb-1">
+                    {t("about.engage.title")}
+                  </h3>
+                  <p className="text-sm text-gray-600">
+                    {t("about.engage.desc")}
+                  </p>
                 </div>
                 <div className="p-4 bg-white/50 rounded-2xl border border-white/50 shadow-sm">
-                  <h3 className="font-bold text-gray-900 mb-1">Scale</h3>
-                  <p className="text-sm text-gray-600">Grow your customer base without increasing your headcount.</p>
+                  <h3 className="font-bold text-gray-900 mb-1">
+                    {t("about.scale.title")}
+                  </h3>
+                  <p className="text-sm text-gray-600">
+                    {t("about.scale.desc")}
+                  </p>
                 </div>
               </div>
             </div>

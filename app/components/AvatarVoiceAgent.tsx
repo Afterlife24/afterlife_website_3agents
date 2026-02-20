@@ -85,12 +85,12 @@ export default function AvatarVoiceAgent({ onClose }: AvatarVoiceAgentProps) {
   }, [handleClose]);
 
   /**
-   * Enable microphone on mount
+   * Ensure microphone is disabled on mount
    */
   useEffect(() => {
-    if (localParticipant && !isListening) {
-      localParticipant.setMicrophoneEnabled(true).catch((error) => {
-        console.error("Error enabling microphone on mount:", error);
+    if (localParticipant) {
+      localParticipant.setMicrophoneEnabled(false).catch((error) => {
+        console.error("Error disabling microphone on mount:", error);
       });
     }
   }, [localParticipant]); // Only run when localParticipant becomes available

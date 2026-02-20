@@ -25,6 +25,37 @@ body {
   font-family: Arial, Helvetica, sans-serif;
 }
 
+/* Arabic RTL Improvements */
+[dir="rtl"] {
+  font-family: 'Segoe UI', Tahoma, Arial, sans-serif;
+}
+
+[dir="rtl"] body {
+  text-align: right;
+}
+
+/* Better Arabic text rendering */
+[dir="rtl"] h1,
+[dir="rtl"] h2,
+[dir="rtl"] h3,
+[dir="rtl"] h4,
+[dir="rtl"] h5,
+[dir="rtl"] h6 {
+  font-weight: 700;
+  letter-spacing: 0;
+}
+
+/* Adjust button and input alignment for RTL */
+[dir="rtl"] button,
+[dir="rtl"] input {
+  text-align: right;
+}
+
+/* Fix flex gaps in RTL */
+[dir="rtl"] .flex {
+  direction: rtl;
+}
+
 @keyframes blob {
   0% {
     transform: translate(0px, 0px) scale(1);

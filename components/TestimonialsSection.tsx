@@ -2,35 +2,34 @@
 
 import React from "react";
 import { Star, Quote } from "lucide-react";
-
-const TESTIMONIALS = [
-  {
-    id: 1,
-    name: "Sarah Jenkins",
-    role: "CTO, TechFlow",
-    content:
-      "Afterlife's voice agent handled 5,000 calls on day one. The latency is non-existent, and our customers genuinely think they're talking to a human.",
-    rating: 5,
-  },
-  {
-    id: 2,
-    name: "Michael Chen",
-    role: "Director of Sales, OmniCorp",
-    content:
-      "The WhatsApp integration tripled our lead qualification speed. We're closing deals faster because the agent handles all the initial grunt work.",
-    rating: 5,
-  },
-  {
-    id: 3,
-    name: "Elena Rodriguez",
-    role: "Founder, StyleStudio",
-    content:
-      "The Web Agent isn't just a chatbot; it actually navigates the site with the user. It's like having a shop assistant for every single visitor.",
-    rating: 5,
-  },
-];
+import { useLanguage } from "@/app/contexts/LanguageContext";
 
 export default function TestimonialsSection() {
+  const { t } = useLanguage();
+
+  const TESTIMONIALS = [
+    {
+      id: 1,
+      name: t("testimonial1.name"),
+      role: t("testimonial1.role"),
+      content: t("testimonial1.content"),
+      rating: 5,
+    },
+    {
+      id: 2,
+      name: t("testimonial2.name"),
+      role: t("testimonial2.role"),
+      content: t("testimonial2.content"),
+      rating: 5,
+    },
+    {
+      id: 3,
+      name: t("testimonial3.name"),
+      role: t("testimonial3.role"),
+      content: t("testimonial3.content"),
+      rating: 5,
+    },
+  ];
   return (
     <section
       id="testimonials"
@@ -38,7 +37,7 @@ export default function TestimonialsSection() {
     >
       <div className="max-w-7xl mx-auto relative z-10">
         <h2 className="text-4xl md:text-5xl font-bold text-gray-900 text-center mb-16">
-          What Our Clients Say
+          {t("testimonials.title")}
         </h2>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">

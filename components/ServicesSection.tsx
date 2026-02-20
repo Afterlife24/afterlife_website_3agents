@@ -1,67 +1,65 @@
 "use client";
 
 import React from "react";
-import { MessageCircle, Mic, Monitor, ArrowRight, Check } from "lucide-react";
-
-const SERVICES = [
-  {
-    id: "whatsapp",
-    title: "WhatsApp Automation",
-    description:
-      "End-to-end sales and support on the world's most popular messaging app.",
-    icon: <MessageCircle className="w-8 h-8 text-white" />,
-    color: "bg-green-500",
-    gradient: "from-green-400 to-emerald-600",
-    features: [
-      "Instant Lead Qualification",
-      "24/7 Customer Support",
-      "Automated Scheduling",
-      "Broadcast Campaigns",
-    ],
-  },
-  {
-    id: "voice",
-    title: "Voice Intelligence",
-    description:
-      "Human-like voice agents that handle inbound and outbound calls with zero latency.",
-    icon: <Mic className="w-8 h-8 text-white" />,
-    color: "bg-purple-500",
-    gradient: "from-purple-400 to-pink-600",
-    features: [
-      "Natural Conversation Flow",
-      "Accent Recognition",
-      "Interrupt Handling",
-      "CRM Integration",
-    ],
-  },
-  {
-    id: "web",
-    title: "Web Assistance",
-    description:
-      "Context-aware AI that guides visitors and resolves queries directly on your site.",
-    icon: <Monitor className="w-8 h-8 text-white" />,
-    color: "bg-blue-500",
-    gradient: "from-blue-400 to-cyan-600",
-    features: [
-      "Page-Aware Context",
-      "Visual Product Guiding",
-      "Instant Form Filling",
-      "Seamless Handover",
-    ],
-  },
-];
+import { MessageCircle, Mic, Monitor, Check } from "lucide-react";
+import { useLanguage } from "@/app/contexts/LanguageContext";
 
 export default function ServicesSection() {
+  const { t } = useLanguage();
+
+  const SERVICES = [
+    {
+      id: "whatsapp",
+      title: t("services.whatsapp.title"),
+      description: t("services.whatsapp.desc"),
+      icon: <MessageCircle className="w-8 h-8 text-white" />,
+      color: "bg-green-500",
+      gradient: "from-green-400 to-emerald-600",
+      features: [
+        t("services.whatsapp.feature1"),
+        t("services.whatsapp.feature2"),
+        t("services.whatsapp.feature3"),
+        t("services.whatsapp.feature4"),
+      ],
+    },
+    {
+      id: "voice",
+      title: t("services.voice.title"),
+      description: t("services.voice.desc"),
+      icon: <Mic className="w-8 h-8 text-white" />,
+      color: "bg-purple-500",
+      gradient: "from-purple-400 to-pink-600",
+      features: [
+        t("services.voice.feature1"),
+        t("services.voice.feature2"),
+        t("services.voice.feature3"),
+        t("services.voice.feature4"),
+      ],
+    },
+    {
+      id: "web",
+      title: t("services.web.title"),
+      description: t("services.web.desc"),
+      icon: <Monitor className="w-8 h-8 text-white" />,
+      color: "bg-blue-500",
+      gradient: "from-blue-400 to-cyan-600",
+      features: [
+        t("services.web.feature1"),
+        t("services.web.feature2"),
+        t("services.web.feature3"),
+        t("services.web.feature4"),
+      ],
+    },
+  ];
   return (
     <section id="services" className="relative w-full py-20 px-4 md:px-8">
       <div className="max-w-7xl mx-auto">
         <div className="text-center mb-16">
           <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4">
-            Our Services
+            {t("services.title")}
           </h2>
           <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-            Comprehensive AI solutions tailored for every channel of your
-            business.
+            {t("services.subtitle")}
           </p>
         </div>
 
