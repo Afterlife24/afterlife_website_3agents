@@ -1,4 +1,4 @@
-name: Deploy Next.js 13 App to AWS Lambda + CloudFront
+name: Deploy Next.js 13 App to AWS Lambda + S3 + CloudFront
 
 on:
   push:
@@ -15,33 +15,39 @@ jobs:
       CLOUDFRONT_DIST_ID: ${{ secrets.CLOUDFRONT_DIST_ID }}
 
     steps:
-      # 1️⃣ Checkout repo
-      - uses: actions/checkout@v3
+      # 1️⃣ Checkout code
+      - name: Checkout code
+        uses: actions/checkout@v3
 
-      # 2️⃣ Setup Node.js
-      - uses: actions/setup-node@v3
+      # 2️⃣ Setup Node.js >=20 for Next.js 13
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
         with:
           node-version: 20
 
       # 3️⃣ Install dependencies
-      - run: npm install --legacy-peer-deps
+      - name: Install dependencies
+        run: npm install --legacy-peer-deps
 
       # 4️⃣ Build Next.js
-      - run: npx next build
+      - name: Build Next.js
+        run: npx next build
 
-      # 5️⃣ Upload static assets to S3
-      - run: |
-          aws s3 sync .next/static s3://$S3_BUCKET_STATIC/_next/static --delete
-          aws s3 sync public s3://$S3_BUCKET_STATIC/ --delete
+      # 5️⃣ Upload static assets to S3 with public-read ACL (or OAI)
+      - name: Upload static assets to S3
+        run: |
+          aws s3 sync .next/static s3://$S3_BUCKET_STATIC/_next/static --delete --acl public-read
+          aws s3 sync public s3://$S3_BUCKET_STATIC/ --delete --acl public-read
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
 
       # 6️⃣ Package SSR Lambda
-      - run: |
+      - name: Package SSR Lambda
+        run: |
           mkdir lambda-package
           cp -r .next/standalone/* lambda-package/
-          # Add Lambda handler
+          # Lambda handler wrapper
           cat << 'EOF' > lambda-package/index.js
           const { default: handler } = require("./server/index.js");
           exports.handler = async (event, context) => {
@@ -52,13 +58,14 @@ jobs:
           zip -r ../next-lambda.zip .
         shell: bash
 
-      # 7️⃣ Create or update Lambda function automatically
-      - run: |
+      # 7️⃣ Create or update Lambda automatically
+      - name: Create or update Lambda
+        run: |
           FUNCTION_EXISTS=$(aws lambda get-function --function-name $LAMBDA_FUNCTION_NAME --region $AWS_REGION || echo "false")
           if [ "$FUNCTION_EXISTS" = "false" ]; then
             aws lambda create-function \
               --function-name $LAMBDA_FUNCTION_NAME \
-              --runtime nodejs18.x \
+              --runtime nodejs20.x \
               --role ${{ secrets.AWS_LAMBDA_ROLE_ARN }} \
               --handler index.handler \
               --zip-file fileb://next-lambda.zip \
@@ -73,8 +80,9 @@ jobs:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
 
-      # 8️⃣ Invalidate CloudFront
-      - run: |
+      # 8️⃣ Invalidate CloudFront cache
+      - name: Invalidate CloudFront
+        run: |
           aws cloudfront create-invalidation \
             --distribution-id $CLOUDFRONT_DIST_ID \
             --paths "/*"
