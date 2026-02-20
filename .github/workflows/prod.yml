@@ -37,7 +37,7 @@ jobs:
       - name: Upload static assets to S3
         run: |
           aws s3 sync .next/static s3://$S3_BUCKET_STATIC/_next/static --delete
-          aws s3 sync public s3://$S3_BUCKET_STATIC/ --delete --acl public-read
+          aws s3 sync public s3://$S3_BUCKET_STATIC/ --delete
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
