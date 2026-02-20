@@ -167,7 +167,7 @@ export default function Home() {
     const fullNumber = `${selectedCountry.dialCode}${cleanedNumber}`;
 
     try {
-      const response = await fetch("http://localhost:8000/whatsappDemo", {
+      const response = await fetch("https://wa.afterlife.org.in/whatsappDemo", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ phone_number: fullNumber }),
@@ -231,7 +231,7 @@ export default function Home() {
     setCallState("connecting");
 
     try {
-      const response = await fetch("http://localhost:5002/makeCall", {
+      const response = await fetch("https://call.afterlife.org.in/makeCall", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -284,7 +284,7 @@ export default function Home() {
     const pollInterval = setInterval(async () => {
       try {
         const response = await fetch(
-          `http://localhost:5002/callStatus/${callId}`,
+          `https://call.afterlife.org.in/callStatus/${callId}`,
         );
         const data = await response.json();
 
